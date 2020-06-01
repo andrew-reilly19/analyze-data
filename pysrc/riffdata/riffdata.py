@@ -408,6 +408,22 @@ class Riffdata:
 def do_extract_participant(participantId, new_db_name):
     riffdata = Riffdata()
     riffdata.create_single_participant_db(participantId, new_db_name)
+'''
+#begin my code
+    new_db = riffdata.client[new_db_name]
+    result = new_db.participants.find()
+    for r in result:
+        pprint.pprint(r)
+
+#    result = new_db.participants.insert_many(participants)
+#    result = new_db.meetings.insert_many(raw_meetings)
+#    result = new_db.participantevents.insert_many(participantevents)
+#    result = new_db.meetingevents.insert_many(meetingevents)
+#    result = new_db.utterances.insert_many(raw_utterances)
+
+'''
+    # added line to drop the temporary database afterwards
+    #riffdata.client.drop_database(new_db_name)
 
 
 def do_drop_db():

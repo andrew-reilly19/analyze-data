@@ -29,6 +29,9 @@ from visualize.meetings import do_analysis as do_meetings_analysis
 from visualize.meeting_timeline import do_analysis as do_meeting_timeline_analysis
 from riffdata.riffdata import do_drop_db as do_drop_riffdata_db, do_extract_participant
 
+#Andrew's additions:
+from analyze.interruptions import average_interruptions_chart
+
 
 @click.command()
 def utterance_gaps():
@@ -125,6 +128,17 @@ def extract_participant(participant_id):
     """
     do_extract_participant(participant_id, 'riff_one_part')
 
+###Begin Andrew's additions:
+@click.command()
+@click.option('--participant-id', '-p', type=str, default=None, required=True, help='Id of the participant to extract')
+def find_interruption_rate(participant_id):
+    """
+    Produces a chart of interruptions for the given participant over time
+    """
+    average_interruptions_chart(participant_id)
+
+
+###End Andrew's additions
 
 @click.group()
 def cli():
@@ -143,6 +157,8 @@ cli.add_command(meetings)
 cli.add_command(meeting_timeline)
 cli.add_command(extract_participant)
 cli.add_command(drop_riffdata_db)
+#Andrew's additions
+cli.add_command(find_interruption_rate)
 
 
 if __name__ == '__main__':
