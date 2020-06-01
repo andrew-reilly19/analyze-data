@@ -134,6 +134,16 @@ def extract_participant(participant_id):
 def find_interruption_rate(participant_id):
     """
     Produces a chart of interruptions for the given participant over time
+        \b
+           name (meeting count) : participant id
+
+        \b
+          - Amy D         (447) : jMZgnpJrX1QwAN0oUkYNme9kD4b2
+          - Beth          (280) : GcOHEObyGzTShEOpSzma6VpzT2Q2
+          - Mike          (253:127 w/ > 2 people) : V4Kc1uN0pgP7oVhaDjcmp6swV2F3
+          - John Doucette (148) : FJwf8UtoqvRJ4jnAaqzV5hcfxAG3
+          - Brec Hanson   (122) : i6T3a2s5WpPo1dxZaRmIJlkFn4m1
+          - Jordan        (107) : SDzkCh0CetQsNw2gUZS5HPX2FCe2
     """
     average_interruptions_chart(participant_id)
 
