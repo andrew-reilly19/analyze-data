@@ -144,7 +144,7 @@ def average_interruptions_chart(participant_Id):
     meetingsDF.columns = ['Meeting']
     compile_interruptions(meetingsDF, utteranceDF, participant_Id)
     meetingsDF = meetingsDF.sort_values(by=['startTime'])
-    print(meetingsDF.head(20))
+    #print(meetingsDF.head(20))
 
     #making interruptions plot
     fig = plt.figure()
