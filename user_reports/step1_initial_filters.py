@@ -4,6 +4,9 @@
 Created on Fri May 22 09:45:30 2020
 
 @author: andrew
+
+NOTE: This is not as needed anymore given that the filtering is now done in step 0
+
 """
 
 import pandas as pd

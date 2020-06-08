@@ -141,3 +141,5 @@ ENV/
 *.png
 *.zip
 *.json
+user_reports/test.csv
+*.csv
