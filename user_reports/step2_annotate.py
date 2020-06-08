@@ -15,6 +15,7 @@ path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_report
 df = pd.read_csv (path+'all_utterances2.csv')
 df['startTime'] =  pd.to_datetime(df['startTime'])
 df['endTime'] =  pd.to_datetime(df['endTime'])
+meetings = df.meeting.unique()
 
 #df_out = df[(df['meeting']=='checkin-1') | (df['meeting']=='beta-2')]
 
@@ -63,8 +64,7 @@ def overall_annotation_function(row):
     #getting intermediate dataframe - all possible intersecting utterances within max utterance length + 3 sec
     start_bracket = row['startTime']-timedelta(seconds=longest_utterance+3.001)
     end_bracket = row['endTime']
-    u_meeting = row['meeting']
-    im_df = df[(df['meeting']==u_meeting) & (df['startTime']>start_bracket) & (df['endTime']<end_bracket)]
+    im_df = df[(df['startTime']>start_bracket) & (df['endTime']<end_bracket)]
     #checking for interruptions
     interr_data = annotate_interruption(row, im_df)
     interruption_flag.append(interr_data[0])
@@ -85,9 +85,17 @@ affirm_flag = []
 affirms_user = []
 influenced_by_flag = []
 influenced_by_user = []
-longest_utterance = round(df.Utterance_Length_secs.max(),3)
+#longest_utterance = round(df.Utterance_Length_secs.max(),3)
 
-df.apply(lambda row: overall_annotation_function(row), axis=1)
+count = 0
+for m in meetings:
+    df2 = df[df['meeting']==m]
+    longest_utterance = round(df2.Utterance_Length_secs.max(),3)
+    df2.apply(lambda row: overall_annotation_function(row), axis=1)
+    count = count+1
+    print(count)
+
+
 I_Flag = pd.DataFrame(interruption_flag)
 I_User = pd.DataFrame(interrupts_user)
 A_Flag = pd.DataFrame(affirm_flag)
@@ -104,7 +112,7 @@ df = pd.concat([df, In_User], axis=1)
 
 df.columns = ['_id','participant','startTime','endTime','meeting','utterance_length','interruption','interrupts_user','affirmation','affirms_user','influenced','influenced_by_user']
 
-df_out.to_csv(path + 'utterances_annotated.csv', index = None)
+df.to_csv(path + 'utterances_annotated.csv', index = None)
 
 
 #### Testing
