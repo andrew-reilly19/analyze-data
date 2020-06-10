@@ -123,8 +123,6 @@ A_User = pd.DataFrame(list(affirms_user.items()), columns=['myindex','affirms_us
 In_Flag = pd.DataFrame(list(influenced_by_flag.items()), columns=['myindex','influenced'])
 In_User = pd.DataFrame(list(influenced_by_user.items()), columns=['myindex','influenced_by_user'])
 
-df.join(other, lsuffix='_caller', rsuffix='_other')
-
 df = df.join(I_Flag, lsuffix='myindex', rsuffix='myindex')
 df = df.join(I_User, lsuffix='myindex', rsuffix='myindex')
 df = df.join(A_Flag, lsuffix='myindex', rsuffix='myindex')
