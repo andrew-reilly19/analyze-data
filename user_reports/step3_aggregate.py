@@ -31,7 +31,7 @@ For aggregate meeting stats, filter overall df by utterances for one specific us
 '''
 known_users = {'jMZgnpJrX1QwAN0oUkYNme9kD4b2':'Amy','GcOHEObyGzTShEOpSzma6VpzT2Q2':'Beth','V4Kc1uN0pgP7oVhaDjcmp6swV2F3':'Mike','FJwf8UtoqvRJ4jnAaqzV5hcfxAG3':'John','i6T3a2s5WpPo1dxZaRmIJlkFn4m1':'Brec','SDzkCh0CetQsNw2gUZS5HPX2FCe2':'Jordan'}
 
-select_participant = 'V4Kc1uN0pgP7oVhaDjcmp6swV2F3' #Mike
+select_participant = 'jMZgnpJrX1QwAN0oUkYNme9kD4b2' #Amy
 
 #only looking at meetings this participant was in
 meetings = dfinit[dfinit['participant']==select_participant].meeting.unique()
