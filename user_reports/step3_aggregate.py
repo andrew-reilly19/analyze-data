@@ -235,5 +235,44 @@ week_meetingsdf_TP.to_csv(outpath + 'week_TP_aggregates.csv')
 month_meetingsdf_TP.to_csv(outpath + 'month_TP_aggregates.csv')
 
 
+#average of averages
+avg_meetingsdf = df.drop(["_id", "interrupts_user", "affirms_user", "influenced_by_user", 'startTime','endTime'], axis=1)
+avg_meetingsdf = avg_meetingsdf.groupby(['meeting', 'participant']).sum()
+avg_meetingsdf.reset_index(drop=False, inplace=True)
+
+meetings_small = dfinit.meeting.unique()
+meetingsdf_small = pd.DataFrame(meetings_small)
+
+meeting_length2 = {}
+meeting_date2 = {}
+
+counter = 0
+total_meet = len(meetings_small)
+for meeting in meetings_small:
+    intermediateDF = df[df['meeting']==meeting]
+    #meeting
+    m_start = intermediateDF.startTime.min()
+    m_end = intermediateDF.endTime.max()
+    m_date = m_start.date()
+    meeting_date2[meeting]=m_date
+    #meeting length
+    meeting_length_mins = ((m_end-m_start).total_seconds())/60
+    meeting_length2[meeting]=meeting_length_mins
+    counter += 1
+    print(counter, ' / ', total_meet)
+
+
+
+meeting_length2 = pd.DataFrame(list(meeting_length2.items()), columns=['meeting1','meetinglength'])
+meeting_date2 = pd.DataFrame(list(meeting_date2.items()), columns=['meeting2','meetingdate'])
+
+avg_meetingsdf2 = avg_meetingsdf.merge(meeting_length2, how='left', left_on='meeting', right_on='meeting1')
+avg_meetingsdf2 = avg_meetingsdf2.merge(meeting_date2, how='left', left_on='meeting',right_on='meeting2')
+avg_meetingsdf2 = avg_meetingsdf2.drop(['meeting1','meeting2'],axis=1)
+
+'''
+need to aggregate the avg_meetingsdf2 data into average times for all users
+'''
+
 print('done!')
 
