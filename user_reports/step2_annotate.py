@@ -16,13 +16,19 @@ dfinit = pd.read_csv (path+'all_utterances2.csv')
 dfinit['startTime'] =  pd.to_datetime(dfinit['startTime'])
 dfinit['endTime'] =  pd.to_datetime(dfinit['endTime'])
 
+dfinit = dfinit.sort_values(by=['startTime'])
+all_meetings = dfinit.meeting.unique()
+
 #smaller df for testing
-df = dfinit[(dfinit['meeting']=='checkin-1') | (dfinit['meeting']=='beta-2') | (dfinit['meeting']=='music-2')| (dfinit['meeting']=='latenite-1')| (dfinit['meeting']=='beta-5')]
+selected_meetings = all_meetings[:20]
+df = dfinit[(dfinit['meeting'].isin(selected_meetings))]
 
 #larger df for overall
 #df = dfinit
 
 meetings = df.meeting.unique()
+
+
 print("loaded data")
 
 def annotate_interruption(target_start, target_end, target_user, target_len, indiv_meetingDF):
