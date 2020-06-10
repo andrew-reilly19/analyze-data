@@ -13,7 +13,7 @@ import os
 
 path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports/'
 
-dfinit = pd.read_csv (path+'utterances_annotated_almost.csv')
+dfinit = pd.read_csv (path+'utterances_annotated.csv')
 dfinit['startTime'] =  pd.to_datetime(dfinit['startTime'])
 dfinit['endTime'] =  pd.to_datetime(dfinit['endTime'])
 df = dfinit.sort_values(by=['startTime'])
@@ -227,12 +227,12 @@ week_meetingsdf_TP = week_meetingsdf_TP.groupby(['meeting_year','meeting_week','
 month_meetingsdf_TP = month_meetingsdf_TP.groupby(['meeting_year','meeting_month', 'total_participants']).sum()
 
 
-week_meetingsdf_noUs.to_csv(outpath + 'week_none_aggregates.csv', index = None)
-month_meetingsdf_noUs.to_csv(outpath + 'month_none_aggregates.csv', index = None)
-week_meetingsdf_TC.to_csv(outpath + 'week_TC_aggregates.csv', index = None)
-month_meetingsdf_TC.to_csv(outpath + 'month_TC_aggregates.csv', index = None)
-week_meetingsdf_TP.to_csv(outpath + 'week_TP_aggregates.csv', index = None)
-month_meetingsdf_TP.to_csv(outpath + 'month_TP_aggregates.csv', index = None)
+week_meetingsdf_noUs.to_csv(outpath + 'week_none_aggregates.csv')
+month_meetingsdf_noUs.to_csv(outpath + 'month_none_aggregates.csv')
+week_meetingsdf_TC.to_csv(outpath + 'week_TC_aggregates.csv')
+month_meetingsdf_TC.to_csv(outpath + 'month_TC_aggregates.csv')
+week_meetingsdf_TP.to_csv(outpath + 'week_TP_aggregates.csv')
+month_meetingsdf_TP.to_csv(outpath + 'month_TP_aggregates.csv')
 
 
 print('done!')

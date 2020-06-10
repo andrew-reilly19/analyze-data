@@ -1,0 +1,74 @@
+---
+title: "Step 4: Plotting the User Report"
+author: "Andrew Reilly"
+date: "6/9/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message=FALSE)
+knitr::opts_chunk$set(warnings=FALSE)
+knitr::opts_chunk$set(error = FALSE)
+knitr::opts_chunk$set(tidy = TRUE)
+```
+
+```{r, include=FALSE}
+library(tidyverse)
+library(plotly)
+library(kableExtra)
+library(cowplot)
+path <- "/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports/Mike/"
+```
+
+example:
+```{r}
+ggplot(ML_over_time, aes(x = Date, y = Prop_time, color = Users_Group) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill = Users_Group)) +
+     labs(x="Date",y="Mike Speaking Time")
+```
+
+# User Report for: Mike 'V4Kc1uN0pgP7oVhaDjcmp6swV2F3'
+
+### Overall Meeting Aggregates by Week and Month:
+```{r}
+weekoverall <- read_csv(paste0(path,"week_none_aggregates.csv"))
+weekoverall$SU_speaking_time <- weekoverall$SU_speaking_time/60
+weekoverall$meeting_week <- as.numeric(weekoverall$meeting_week)
+weekoverall <- weekoverall %>% 
+  mutate(average_speaking_time=SU_speaking_time/meeting_length_mins) %>% 
+  mutate(time=((meeting_year-2018)*52)+meeting_week)
+
+monthoverall <- read_csv(paste0(path,"month_none_aggregates.csv"))
+monthoverall$SU_speaking_time <- monthoverall$SU_speaking_time/60
+monthoverall$meeting_month <- as.numeric(monthoverall$meeting_month)
+monthoverall <- monthoverall %>% 
+  mutate(average_speaking_time=SU_speaking_time/meeting_length_mins) %>% 
+  mutate(time=((meeting_year-2018)*12)+meeting_month)
+
+weekoverall$SU_interruptions <- weekoverall$SU_interruptions/weekoverall$SU_speaking_time
+weekoverall$SU_affirmations <- weekoverall$SU_affirmations/weekoverall$SU_speaking_time
+weekoverall$SU_influenced_by <- weekoverall$SU_influenced_by/weekoverall$SU_speaking_time
+weekoverall$SU_interrupted <- weekoverall$SU_interrupted/weekoverall$SU_speaking_time
+weekoverall$SU_affirmed <- weekoverall$SU_affirmed/weekoverall$SU_speaking_time
+weekoverall$SU_influences <- weekoverall$SU_influences/weekoverall$SU_speaking_time
+
+monthoverall$SU_interruptions <- monthoverall$SU_interruptions/monthoverall$SU_speaking_time
+monthoverall$SU_affirmations <- monthoverall$SU_affirmations/monthoverall$SU_speaking_time
+monthoverall$SU_influenced_by <- monthoverall$SU_influenced_by/monthoverall$SU_speaking_time
+monthoverall$SU_interrupted <- monthoverall$SU_interrupted/monthoverall$SU_speaking_time
+monthoverall$SU_affirmed <- monthoverall$SU_affirmed/monthoverall$SU_speaking_time
+monthoverall$SU_influences <- monthoverall$SU_influences/monthoverall$SU_speaking_time
+```
+
+```{r}
+#average speaking time per week
+
+```
+
+
+
+
+
