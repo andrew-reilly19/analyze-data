@@ -1,5 +1,5 @@
 ---
-title: "Step 4: Plotting the User Report"
+title: "User Report"
 author: "Andrew Reilly"
 date: "6/9/2020"
 output: html_document
@@ -19,15 +19,9 @@ library(tidyverse)
 library(plotly)
 library(kableExtra)
 library(cowplot)
+#install.packages('ISOweek')
+library(ISOweek)
 path <- "/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports/Mike/"
-```
-
-example:
-```{r}
-ggplot(ML_over_time, aes(x = Date, y = Prop_time, color = Users_Group) ) +
-     geom_point() +
-     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill = Users_Group)) +
-     labs(x="Date",y="Mike Speaking Time")
 ```
 
 # User Report for: Mike 'V4Kc1uN0pgP7oVhaDjcmp6swV2F3'
@@ -36,17 +30,205 @@ ggplot(ML_over_time, aes(x = Date, y = Prop_time, color = Users_Group) ) +
 ```{r}
 weekoverall <- read_csv(paste0(path,"week_none_aggregates.csv"))
 weekoverall$SU_speaking_time <- weekoverall$SU_speaking_time/60
-weekoverall$meeting_week <- as.numeric(weekoverall$meeting_week)
+weekoverall$meeting_week <- as.character(weekoverall$meeting_week)
+weekoverall$meeting_year <- as.character(weekoverall$meeting_year)
 weekoverall <- weekoverall %>% 
   mutate(average_speaking_time=SU_speaking_time/meeting_length_mins) %>% 
-  mutate(time=((meeting_year-2018)*52)+meeting_week)
+  mutate(time=(ISOweek::ISOweek2date(paste0(meeting_year,"-W",meeting_week,"-1"))))
 
 monthoverall <- read_csv(paste0(path,"month_none_aggregates.csv"))
 monthoverall$SU_speaking_time <- monthoverall$SU_speaking_time/60
 monthoverall$meeting_month <- as.numeric(monthoverall$meeting_month)
 monthoverall <- monthoverall %>% 
   mutate(average_speaking_time=SU_speaking_time/meeting_length_mins) %>% 
-  mutate(time=((meeting_year-2018)*12)+meeting_month)
+  mutate(time=(ISOdate(year=meeting_year,month = meeting_month, day = 1)))
+ # mutate(time=as.date(paste0(meeting_year,"/1/",meeting_month),format="%Y/%d/%m"))
+
+weekoverall$SU_interruptions <- weekoverall$SU_interruptions/weekoverall$SU_speaking_time
+weekoverall$SU_affirmations <- weekoverall$SU_affirmations/weekoverall$SU_speaking_time
+weekoverall$SU_influenced_by <- weekoverall$SU_influenced_by/weekoverall$SU_speaking_time
+weekoverall$SU_interrupted <- weekoverall$SU_interrupted/weekoverall$SU_speaking_time
+weekoverall$SU_affirmed <- weekoverall$SU_affirmed/weekoverall$SU_speaking_time
+weekoverall$SU_influences <- weekoverall$SU_influences/weekoverall$SU_speaking_time
+
+weekoverall <- weekoverall %>% filter(weekoverall$SU_affirmations<20)
+
+monthoverall$SU_interruptions <- monthoverall$SU_interruptions/monthoverall$SU_speaking_time
+monthoverall$SU_affirmations <- monthoverall$SU_affirmations/monthoverall$SU_speaking_time
+monthoverall$SU_influenced_by <- monthoverall$SU_influenced_by/monthoverall$SU_speaking_time
+monthoverall$SU_interrupted <- monthoverall$SU_interrupted/monthoverall$SU_speaking_time
+monthoverall$SU_affirmed <- monthoverall$SU_affirmed/monthoverall$SU_speaking_time
+monthoverall$SU_influences <- monthoverall$SU_influences/monthoverall$SU_speaking_time
+```
+
+```{r}
+#average speaking time per week
+g_w <- ggplot(weekoverall, aes(x = time, y = average_speaking_time) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F) +
+     labs(x="Time",y="Average Speaking Time",title = "Average Speaking Time per week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = average_speaking_time) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F) +
+     labs(x="Time",y="Average Speaking Time", title="Average Speaking Time per month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+<div style="margin-bottom:100px;">
+</div>
+
+```{r}
+#average interruptions per minute per week
+g_w <- ggplot(weekoverall, aes(x = time, y = SU_interruptions) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, color='red') +
+     labs(x="Time",y="Average Interruptions per minute",title = "Average Times Interrupting Someone Else per minute by week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = SU_interruptions) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, color='red') +
+     labs(x="Time",y="Average Interruptions per minute", title="Average Times Interrupting Someone Else per minute by month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+<div style="margin-bottom:100px;">
+</div>
+
+```{r}
+#average affirmations per minute per week
+g_w <- ggplot(weekoverall, aes(x = time, y = SU_affirmations) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, color='green') +
+     labs(x="Time",y="Average Affirmations per minute",title = "Average Times Affirming Someone Else per minute by week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = SU_affirmations) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, color='green') +
+     labs(x="Time",y="Average Affirmations per minute", title="Average Times Affirming Someone Else per minute by month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+<div style="margin-bottom:100px;">
+</div>
+
+```{r}
+#average influences per minute per week
+g_w <- ggplot(weekoverall, aes(x = time, y = SU_influences) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, color='orange') +
+     labs(x="Time",y="Average Influences per minute",title = "Average Times Influencing Someone Else per minute by week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = SU_influences) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, color='orange') +
+     labs(x="Time",y="Average Influences per minute", title="Average Times Influencing Someone Else per minute by month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+<div style="margin-bottom:100px;">
+</div>
+
+```{r}
+#average times interrupted per minute per week
+g_w <- ggplot(weekoverall, aes(x = time, y = SU_interrupted) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, color='red') +
+     labs(x="Time",y="Average times Interrupted per minute",title = "Average Times Interrupted by Someone Else per minute by week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = SU_interrupted) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, color='red') +
+     labs(x="Time",y="Average times Interrupted per minute", title="Average Times Interrupted by Someone Else per minute by month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+<div style="margin-bottom:100px;">
+</div>
+
+```{r}
+#average times affirmed per minute per week
+g_w <- ggplot(weekoverall, aes(x = time, y = SU_affirmed) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, color='green') +
+     labs(x="Time",y="Average times Affirmed per minute",title = "Average Times Affirmed by Someone Else per minute by week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = SU_affirmed) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, color='green') +
+     labs(x="Time",y="Average times Affirmed per minute", title="Average Times Affirmed by Someone Else per minute by month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+<div style="margin-bottom:100px;">
+</div>
+
+
+```{r}
+#average times influenced per minute per week
+g_w <- ggplot(weekoverall, aes(x = time, y = SU_influenced_by) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, color='orange') +
+     labs(x="Time",y="Average times Influenced per minute",title = "Average Times Influenced by Someone Else per minute by week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = SU_influenced_by) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, color='orange') +
+     labs(x="Time",y="Average times Influenced per minute", title="Average Times Influenced by Someone Else per minute by month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+
+<div style="margin-bottom:200px;">
+</div>
+
+### Overall Meeting Aggregates by Week and Month, affected by the most common collaborator:
+```{r}
+weekoverall <- read_csv(paste0(path,"week_TC_aggregates.csv"))
+weekoverall$SU_speaking_time <- weekoverall$SU_speaking_time/60
+weekoverall$meeting_week <- as.character(weekoverall$meeting_week)
+weekoverall$meeting_year <- as.character(weekoverall$meeting_year)
+weekoverall <- weekoverall %>% 
+  mutate(average_speaking_time=SU_speaking_time/meeting_length_mins) %>% 
+  mutate(time=(ISOweek::ISOweek2date(paste0(meeting_year,"-W",meeting_week,"-1")))) %>% 
+  mutate(with_top_collaborator=fct_recode(factor(with_top_collaborator),"True"="1","False"="0"))
+
+monthoverall <- read_csv(paste0(path,"month_TC_aggregates.csv"))
+monthoverall$SU_speaking_time <- monthoverall$SU_speaking_time/60
+monthoverall$meeting_month <- as.numeric(monthoverall$meeting_month)
+monthoverall <- monthoverall %>% 
+  mutate(average_speaking_time=SU_speaking_time/meeting_length_mins) %>% 
+  mutate(time=(ISOdate(year=meeting_year,month = meeting_month, day = 1))) %>% 
+  mutate(with_top_collaborator=fct_recode(factor(with_top_collaborator),"True"="1","False"="0"))
+
 
 weekoverall$SU_interruptions <- weekoverall$SU_interruptions/weekoverall$SU_speaking_time
 weekoverall$SU_affirmations <- weekoverall$SU_affirmations/weekoverall$SU_speaking_time
@@ -61,14 +243,368 @@ monthoverall$SU_influenced_by <- monthoverall$SU_influenced_by/monthoverall$SU_s
 monthoverall$SU_interrupted <- monthoverall$SU_interrupted/monthoverall$SU_speaking_time
 monthoverall$SU_affirmed <- monthoverall$SU_affirmed/monthoverall$SU_speaking_time
 monthoverall$SU_influences <- monthoverall$SU_influences/monthoverall$SU_speaking_time
+
+
+weekoverall <- weekoverall %>% filter(SU_affirmations<10) %>% 
+  filter(SU_interruptions<.35) %>% 
+  filter(SU_influences<12)
+
+monthoverall <- monthoverall %>% filter(SU_affirmations<10) %>% 
+  filter(SU_interruptions<.35) %>% 
+  filter(SU_influences<12)
+```
+
+```{r}
+#top collaborators
+top_collaborators <- read_csv(paste0(path,"other_known_users.csv"))
+kable(top_collaborators, format = "html") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
+```
+
+
+```{r}
+#average speaking time per week
+g_w <- ggplot(weekoverall, aes(x = time, y = average_speaking_time, color=with_top_collaborator)) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=with_top_collaborator)) +
+     labs(x="Time",y="Average Speaking Time",title = "Average Speaking Time per week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = average_speaking_time, color=with_top_collaborator) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill = with_top_collaborator)) +
+     labs(x="Time",y="Average Speaking Time", title="Average Speaking Time per month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+<div style="margin-bottom:100px;">
+</div>
+
+```{r}
+#average interruptions per minute per week
+g_w <- ggplot(weekoverall, aes(x = time, y = SU_interruptions, color=with_top_collaborator) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=with_top_collaborator))+
+     labs(x="Time",y="Average Interruptions per minute",title = "Average Times Interrupting Someone Else per minute by week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = SU_interruptions, color=with_top_collaborator) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=with_top_collaborator)) +
+     labs(x="Time",y="Average Interruptions per minute", title="Average Times Interrupting Someone Else per minute by month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+<div style="margin-bottom:100px;">
+</div>
+
+```{r}
+#average affirmations per minute per week
+g_w <- ggplot(weekoverall, aes(x = time, y = SU_affirmations, color=with_top_collaborator) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=with_top_collaborator)) +
+     labs(x="Time",y="Average Affirmations per minute",title = "Average Times Affirming Someone Else per minute by week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = SU_affirmations, color=with_top_collaborator)) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=with_top_collaborator)) +
+     labs(x="Time",y="Average Affirmations per minute", title="Average Times Affirming Someone Else per minute by month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+<div style="margin-bottom:100px;">
+</div>
+
+```{r}
+#average influences per minute per week
+g_w <- ggplot(weekoverall, aes(x = time, y = SU_influences, color=with_top_collaborator) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=with_top_collaborator)) +
+     labs(x="Time",y="Average Influences per minute",title = "Average Times Influencing Someone Else per minute by week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = SU_influences, color=with_top_collaborator) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=with_top_collaborator)) +
+     labs(x="Time",y="Average Influences per minute", title="Average Times Influencing Someone Else per minute by month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+<div style="margin-bottom:100px;">
+</div>
+
+```{r}
+#average times interrupted per minute per week
+g_w <- ggplot(weekoverall, aes(x = time, y = SU_interrupted, color=with_top_collaborator) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=with_top_collaborator)) +
+     labs(x="Time",y="Average times Interrupted per minute",title = "Average Times Interrupted by Someone Else per minute by week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = SU_interrupted, color=with_top_collaborator) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=with_top_collaborator)) +
+     labs(x="Time",y="Average times Interrupted per minute", title="Average Times Interrupted by Someone Else per minute by month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+<div style="margin-bottom:100px;">
+</div>
+
+```{r}
+#average times affirmed per minute per week
+g_w <- ggplot(weekoverall, aes(x = time, y = SU_affirmed, color=with_top_collaborator) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=with_top_collaborator)) +
+     labs(x="Time",y="Average times Affirmed per minute",title = "Average Times Affirmed by Someone Else per minute by week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = SU_affirmed, color=with_top_collaborator) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=with_top_collaborator)) +
+     labs(x="Time",y="Average times Affirmed per minute", title="Average Times Affirmed by Someone Else per minute by month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+<div style="margin-bottom:100px;">
+</div>
+
+
+```{r}
+#average times influenced per minute per week
+g_w <- ggplot(weekoverall, aes(x = time, y = SU_influenced_by, color=with_top_collaborator) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=with_top_collaborator)) +
+     labs(x="Time",y="Average times Influenced per minute",title = "Average Times Influenced by Someone Else per minute by week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = SU_influenced_by, color=with_top_collaborator) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=with_top_collaborator)) +
+     labs(x="Time",y="Average times Influenced per minute", title="Average Times Influenced by Someone Else per minute by month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+
+<div style="margin-bottom:200px;">
+</div>
+
+
+### Overall Meeting Aggregates by Week and Month, by Meeting type:
+```{r}
+weekoverall <- read_csv(paste0(path,"week_TP_aggregates.csv"))
+weekoverall$SU_speaking_time <- weekoverall$SU_speaking_time/60
+weekoverall$meeting_week <- as.character(weekoverall$meeting_week)
+weekoverall$meeting_year <- as.character(weekoverall$meeting_year)
+weekoverall <- weekoverall %>% 
+  mutate(average_speaking_time=SU_speaking_time/meeting_length_mins) %>% 
+  mutate(time=(ISOweek::ISOweek2date(paste0(meeting_year,"-W",meeting_week,"-1"))))
+
+monthoverall <- read_csv(paste0(path,"month_TP_aggregates.csv"))
+monthoverall$SU_speaking_time <- monthoverall$SU_speaking_time/60
+monthoverall$meeting_month <- as.numeric(monthoverall$meeting_month)
+monthoverall <- monthoverall %>% 
+  mutate(average_speaking_time=SU_speaking_time/meeting_length_mins) %>% 
+  mutate(time=(ISOdate(year=meeting_year,month = meeting_month, day = 1)))
+
+
+weekoverall$SU_interruptions <- weekoverall$SU_interruptions/weekoverall$SU_speaking_time
+weekoverall$SU_affirmations <- weekoverall$SU_affirmations/weekoverall$SU_speaking_time
+weekoverall$SU_influenced_by <- weekoverall$SU_influenced_by/weekoverall$SU_speaking_time
+weekoverall$SU_interrupted <- weekoverall$SU_interrupted/weekoverall$SU_speaking_time
+weekoverall$SU_affirmed <- weekoverall$SU_affirmed/weekoverall$SU_speaking_time
+weekoverall$SU_influences <- weekoverall$SU_influences/weekoverall$SU_speaking_time
+
+monthoverall$SU_interruptions <- monthoverall$SU_interruptions/monthoverall$SU_speaking_time
+monthoverall$SU_affirmations <- monthoverall$SU_affirmations/monthoverall$SU_speaking_time
+monthoverall$SU_influenced_by <- monthoverall$SU_influenced_by/monthoverall$SU_speaking_time
+monthoverall$SU_interrupted <- monthoverall$SU_interrupted/monthoverall$SU_speaking_time
+monthoverall$SU_affirmed <- monthoverall$SU_affirmed/monthoverall$SU_speaking_time
+monthoverall$SU_influences <- monthoverall$SU_influences/monthoverall$SU_speaking_time
+
+
+weekoverall <- weekoverall %>% filter(SU_affirmations<10) %>% 
+  filter(SU_interruptions<.35) %>% 
+  filter(SU_influences<12)
+
+monthoverall <- monthoverall %>% filter(SU_affirmations<10) %>% 
+  filter(SU_interruptions<.35) %>% 
+  filter(SU_influences<12)
 ```
 
 ```{r}
 #average speaking time per week
+g_w <- ggplot(weekoverall, aes(x = time, y = average_speaking_time, color=total_participants)) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill = total_participants)) +
+     labs(x="Time",y="Average Speaking Time",title = "Average Speaking Time per week") +
+     theme_minimal()
 
+g_m <- ggplot(monthoverall, aes(x = time, y = average_speaking_time, color=total_participants) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill = total_participants)) +
+     labs(x="Time",y="Average Speaking Time", title="Average Speaking Time per month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+<div style="margin-bottom:100px;">
+</div>
+
+```{r}
+#average interruptions per minute per week
+g_w <- ggplot(weekoverall, aes(x = time, y = SU_interruptions, color=total_participants) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=total_participants))+
+     labs(x="Time",y="Average Interruptions per minute",title = "Average Times Interrupting Someone Else per minute by week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = SU_interruptions, color=total_participants) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=total_participants)) +
+     labs(x="Time",y="Average Interruptions per minute", title="Average Times Interrupting Someone Else per minute by month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+<div style="margin-bottom:100px;">
+</div>
+
+```{r}
+#average affirmations per minute per week
+g_w <- ggplot(weekoverall, aes(x = time, y = SU_affirmations, color=total_participants) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=total_participants)) +
+     labs(x="Time",y="Average Affirmations per minute",title = "Average Times Affirming Someone Else per minute by week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = SU_affirmations, color=total_participants)) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=total_participants)) +
+     labs(x="Time",y="Average Affirmations per minute", title="Average Times Affirming Someone Else per minute by month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+<div style="margin-bottom:100px;">
+</div>
+
+```{r}
+#average influences per minute per week
+g_w <- ggplot(weekoverall, aes(x = time, y = SU_influences, color=total_participants) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=total_participants)) +
+     labs(x="Time",y="Average Influences per minute",title = "Average Times Influencing Someone Else per minute by week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = SU_influences, color=total_participants) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=total_participants)) +
+     labs(x="Time",y="Average Influences per minute", title="Average Times Influencing Someone Else per minute by month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+<div style="margin-bottom:100px;">
+</div>
+
+```{r}
+#average times interrupted per minute per week
+g_w <- ggplot(weekoverall, aes(x = time, y = SU_interrupted, color=total_participants) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=total_participants)) +
+     labs(x="Time",y="Average times Interrupted per minute",title = "Average Times Interrupted by Someone Else per minute by week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = SU_interrupted, color=total_participants) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=total_participants)) +
+     labs(x="Time",y="Average times Interrupted per minute", title="Average Times Interrupted by Someone Else per minute by month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+<div style="margin-bottom:100px;">
+</div>
+
+```{r}
+#average times affirmed per minute per week
+g_w <- ggplot(weekoverall, aes(x = time, y = SU_affirmed, color=total_participants) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=total_participants)) +
+     labs(x="Time",y="Average times Affirmed per minute",title = "Average Times Affirmed by Someone Else per minute by week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = SU_affirmed, color=total_participants) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=total_participants)) +
+     labs(x="Time",y="Average times Affirmed per minute", title="Average Times Affirmed by Someone Else per minute by month") +
+     theme_minimal()
+
+g_w
+g_m
+```
+
+<div style="margin-bottom:100px;">
+</div>
+
+
+```{r}
+#average times influenced per minute per week
+g_w <- ggplot(weekoverall, aes(x = time, y = SU_influenced_by, color=total_participants) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=total_participants)) +
+     labs(x="Time",y="Average times Influenced per minute",title = "Average Times Influenced by Someone Else per minute by week") +
+     theme_minimal()
+
+g_m <- ggplot(monthoverall, aes(x = time, y = SU_influenced_by, color=total_participants) ) +
+     geom_point() +
+     geom_smooth(method = "lm", alpha = .15, se=F, aes(fill=total_participants)) +
+     labs(x="Time",y="Average times Influenced per minute", title="Average Times Influenced by Someone Else per minute by month") +
+     theme_minimal()
+
+g_w
+g_m
 ```
 
 
 
-
-
+```{r}
+#example
+# ggplot(ML_over_time, aes(x = Date, y = Prop_time, color = Users_Group) ) +
+#      geom_point() +
+#      geom_smooth(method = "lm", alpha = .15, se=F, aes(fill = Users_Group)) +
+#      labs(x="Date",y="Mike Speaking Time")
+```

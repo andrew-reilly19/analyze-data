@@ -192,9 +192,9 @@ def group_nusers(row):
     nusers = row['total_participants']
     if nusers == 2:
         return("2")
-    if nusers>2 & nusers<=4:
+    if nusers<=4:
         return("3-4")
-    if nusers>4 & nusers<=7:
+    if nusers<=7:
         return("5-7")
     if nusers>7:
         return("8+")
