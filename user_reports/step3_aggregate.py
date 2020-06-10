@@ -111,14 +111,16 @@ meetingsdf = pd.concat([meetingsdf, user_affirmations, user_influenced, user_int
 
 meetingsdf.columns = ['meeting_name','meeting_length_mins','meeting_date','total_participants','SU_speaking_time','SU_interruptions','SU_affirmations','SU_influenced_by','SU_interrupted','SU_affirmed','SU_influences']
 
+#writing out basic meetings data
+outpath = path + select_participant + '/'
+df.to_csv(outpath + 'all_meetings_aggregates.csv', index = None)
+
 
 common_users = pd.DataFrame(list(ap_dict.items()), columns=['user','shared_meetings'])
-
 common_users = common_users[(common_users['user']!=select_participant) & (common_users['shared_meetings']>1)]
-
 most_common_buddy = common_users[(common_users['shared_meetings']==common_users.shared_meetings.max())].iloc[0]['user']
 
-print(most_common_buddy)
+
 
 
 

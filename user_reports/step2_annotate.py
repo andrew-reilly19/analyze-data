@@ -26,8 +26,15 @@ df = dfinit[(dfinit['meeting'].isin(selected_meetings))]
 #larger df for overall
 #df = dfinit
 
-meetings = df.meeting.unique()
+#adding on a newish index for joins later
+dflen = df.shape[0]
+df_cols = list(df.columns.values)
+myindex = pd.DataFrame(range(dflen))
+df = pd.concat([df,myindex], axis=1)
+df_cols.append('myindex')
+df.columns = df_cols
 
+meetings = df.meeting.unique()
 
 print("loaded data")
 
@@ -76,26 +83,27 @@ def overall_annotation_function(row, max_utterance):
     row_end = row['endTime']
     row_user = row['participant']
     row_len = row['Utterance_Length_secs']
+    my_index = row['myindex']
     #checking for interruptions
     interr_data = annotate_interruption(target_start=row_start, target_end=row_end, target_user=row_user, target_len=row_len, indiv_meetingDF=im_df)
-    interruption_flag.append(interr_data[0])
-    interrupts_user.append(interr_data[1])
+    interruption_flag[my_index] = interr_data[0]
+    interrupts_user[my_index] = interr_data[1]
     #checking for affirmations
     affirm_data = annotate_affirmations(target_start=row_start, target_end=row_end, target_user=row_user, target_len = row_len, indiv_meetingDF=im_df)
-    affirm_flag.append(affirm_data[0])
-    affirms_user.append(affirm_data[1])
+    affirm_flag[my_index] = affirm_data[0]
+    affirms_user[my_index] = affirm_data[1]
     #checking for influenced_by
     influence_data = annotate_influence(target_start=row_start, target_user=row_user, target_len=row_len, indiv_meetingDF=im_df)
-    influenced_by_flag.append(influence_data[0])
-    influenced_by_user.append(influence_data[1])
+    influenced_by_flag[my_index] = influence_data[0]
+    influenced_by_user[my_index] = influence_data[1]
 
 #initializing arrays - this should be one large numpy array at some point...
-interruption_flag = []
-interrupts_user = []
-affirm_flag = []
-affirms_user = []
-influenced_by_flag = []
-influenced_by_user = []
+interruption_flag = {}
+interrupts_user = {}
+affirm_flag = {}
+affirms_user = {}
+influenced_by_flag = {}
+influenced_by_user = {}
 #longest_utterance = round(df.Utterance_Length_secs.max(),3)
 
 count = 0
@@ -108,24 +116,25 @@ for m in meetings:
     print(count," / ",totalcount)
 
 
-I_Flag = pd.DataFrame(interruption_flag)
-I_User = pd.DataFrame(interrupts_user)
-A_Flag = pd.DataFrame(affirm_flag)
-A_User = pd.DataFrame(affirms_user)
-In_Flag = pd.DataFrame(influenced_by_flag)
-In_User = pd.DataFrame(influenced_by_user)
+I_Flag = pd.DataFrame(list(interruption_flag.items()), columns=['myindex','interruption'])
+I_User = pd.DataFrame(list(interrupts_user.items()), columns=['myindex','interrupts_user'])
+A_Flag = pd.DataFrame(list(affirm_flag.items()), columns=['myindex','affirmation'])
+A_User = pd.DataFrame(list(affirms_user.items()), columns=['myindex','affirms_user'])
+In_Flag = pd.DataFrame(list(influenced_by_flag.items()), columns=['myindex','influenced'])
+In_User = pd.DataFrame(list(influenced_by_user.items()), columns=['myindex','influenced_by_user'])
 
+df.join(other, lsuffix='_caller', rsuffix='_other')
 
-df = pd.concat([df, I_Flag], axis=1)
-df = pd.concat([df, I_User], axis=1)
-df = pd.concat([df, A_Flag], axis=1)
-df = pd.concat([df, A_User], axis=1)
-df = pd.concat([df, In_Flag], axis=1)
-df = pd.concat([df, In_User], axis=1)
+df = df.join(I_Flag, lsuffix='myindex', rsuffix='myindex')
+df = df.join(I_User, lsuffix='myindex', rsuffix='myindex')
+df = df.join(A_Flag, lsuffix='myindex', rsuffix='myindex')
+df = df.join(A_User, lsuffix='myindex', rsuffix='myindex')
+df = df.join(In_Flag, lsuffix='myindex', rsuffix='myindex')
+df = df.join(In_User, lsuffix='myindex', rsuffix='myindex')
 
-df.columns = ['_id','participant','startTime','endTime','meeting','utterance_length','interruption','interrupts_user','affirmation','affirms_user','influenced','influenced_by_user']
+#df.columns = ['_id','participant','startTime','endTime','meeting','utterance_length','interruption','interrupts_user','affirmation','affirms_user','influenced','influenced_by_user']
 
-df.to_csv(path + 'utterances_annotated.csv', index = None)
+#df.to_csv(path + 'utterances_annotated.csv', index = None)
 
 
 #### Testing
