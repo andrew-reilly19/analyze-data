@@ -169,7 +169,7 @@ meetingsdf = meetingsdf.drop('meeting1', axis=1)
 
 df.to_csv(outpath + 'all_meetings_aggregates.csv', index = None)
 
-
+print("aggregating by month/weeks")
 #finally, creating one last document strictly meant for graphing purposes - these will be combined on
 #a weekly basis and it will be utterances/min, etc. per week
 
@@ -210,29 +210,30 @@ month_meetingsdf = date_meetingsdf.drop(['meeting_date', 'meeting_week'],axis=1)
 week_meetingsdf_noUs = week_meetingsdf.drop(['total_participants','with_top_collaborator'],axis=1)
 month_meetingsdf_noUs = month_meetingsdf.drop(['total_participants','with_top_collaborator'],axis=1)
 
-week_meetingsdf_noTP = week_meetingsdf.drop(['total_participants'],axis=1)
-month_meetingsdf_noTP = month_meetingsdf.drop(['total_participants'],axis=1)
+week_meetingsdf_TC = week_meetingsdf.drop(['total_participants'],axis=1)
+month_meetingsdf_TC = month_meetingsdf.drop(['total_participants'],axis=1)
 
-week_meetingsdf_noTC = week_meetingsdf.drop(['with_top_collaborator'],axis=1)
-month_meetingsdf_noTC = month_meetingsdf.drop(['with_top_collaborator'],axis=1)
+week_meetingsdf_TP = week_meetingsdf.drop(['with_top_collaborator'],axis=1)
+month_meetingsdf_TP = month_meetingsdf.drop(['with_top_collaborator'],axis=1)
 
 
 week_meetingsdf_noUs = week_meetingsdf_noUs.groupby(['meeting_year','meeting_week']).sum()
 month_meetingsdf_noUs = month_meetingsdf_noUs.groupby(['meeting_year','meeting_month']).sum()
 
-week_meetingsdf_noTP = week_meetingsdf_noUs.groupby(['meeting_year','meeting_week','with_top_collaborator']).sum()
-month_meetingsdf_noTP = month_meetingsdf_noUs.groupby(['meeting_year','meeting_month','with_top_collaborator']).sum()
+week_meetingsdf_TC = week_meetingsdf_TC.groupby(['meeting_year','meeting_week','with_top_collaborator']).sum()
+month_meetingsdf_TC = month_meetingsdf_TC.groupby(['meeting_year','meeting_month','with_top_collaborator']).sum()
 
-week_meetingsdf_noTC = week_meetingsdf_noUs.groupby(['meeting_year','meeting_week','total_participants']).sum()
-month_meetingsdf_noTC = month_meetingsdf_noUs.groupby(['meeting_year','meeting_month', 'total_participants']).sum()
+week_meetingsdf_TP = week_meetingsdf_TP.groupby(['meeting_year','meeting_week','total_participants']).sum()
+month_meetingsdf_TP = month_meetingsdf_TP.groupby(['meeting_year','meeting_month', 'total_participants']).sum()
+
+
+week_meetingsdf_noUs.to_csv(outpath + 'week_none_aggregates.csv', index = None)
+month_meetingsdf_noUs.to_csv(outpath + 'month_none_aggregates.csv', index = None)
+week_meetingsdf_TC.to_csv(outpath + 'week_TC_aggregates.csv', index = None)
+month_meetingsdf_TC.to_csv(outpath + 'month_TC_aggregates.csv', index = None)
+week_meetingsdf_TP.to_csv(outpath + 'week_TP_aggregates.csv', index = None)
+month_meetingsdf_TP.to_csv(outpath + 'month_TP_aggregates.csv', index = None)
+
 
 print('done!')
-
-
-
-
-
-
-
-
 
