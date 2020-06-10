@@ -116,23 +116,23 @@ for m in meetings:
     print(count," / ",totalcount)
 
 
-I_Flag = pd.DataFrame(list(interruption_flag.items()), columns=['myindex','interruption'])
-I_User = pd.DataFrame(list(interrupts_user.items()), columns=['myindex','interrupts_user'])
-A_Flag = pd.DataFrame(list(affirm_flag.items()), columns=['myindex','affirmation'])
-A_User = pd.DataFrame(list(affirms_user.items()), columns=['myindex','affirms_user'])
-In_Flag = pd.DataFrame(list(influenced_by_flag.items()), columns=['myindex','influenced'])
-In_User = pd.DataFrame(list(influenced_by_user.items()), columns=['myindex','influenced_by_user'])
+I_Flag = pd.DataFrame(list(interruption_flag.items()), columns=['myindex1','interruption'])
+I_User = pd.DataFrame(list(interrupts_user.items()), columns=['myindex2','interrupts_user'])
+A_Flag = pd.DataFrame(list(affirm_flag.items()), columns=['myindex3','affirmation'])
+A_User = pd.DataFrame(list(affirms_user.items()), columns=['myindex4','affirms_user'])
+In_Flag = pd.DataFrame(list(influenced_by_flag.items()), columns=['myindex5','influenced'])
+In_User = pd.DataFrame(list(influenced_by_user.items()), columns=['myindex6','influenced_by_user'])
 
-df = df.join(I_Flag, lsuffix='myindex', rsuffix='myindex')
-df = df.join(I_User, lsuffix='myindex', rsuffix='myindex')
-df = df.join(A_Flag, lsuffix='myindex', rsuffix='myindex')
-df = df.join(A_User, lsuffix='myindex', rsuffix='myindex')
-df = df.join(In_Flag, lsuffix='myindex', rsuffix='myindex')
-df = df.join(In_User, lsuffix='myindex', rsuffix='myindex')
+df = df.join(I_Flag, lsuffix='myindex', rsuffix='myindex1')
+df = df.join(I_User, lsuffix='myindex', rsuffix='myindex2')
+df = df.join(A_Flag, lsuffix='myindex', rsuffix='myindex3')
+df = df.join(A_User, lsuffix='myindex', rsuffix='myindex4')
+df = df.join(In_Flag, lsuffix='myindex', rsuffix='myindex5')
+df = df.join(In_User, lsuffix='myindex', rsuffix='myindex6')
 
-#df.columns = ['_id','participant','startTime','endTime','meeting','utterance_length','interruption','interrupts_user','affirmation','affirms_user','influenced','influenced_by_user']
-
-#df.to_csv(path + 'utterances_annotated.csv', index = None)
+df = df.drop(['myindex','myindex1','myindex2','myindex3','myindex4','myindex5','myindex6'], axis=1)
+df.columns = ['_id','participant','startTime','endTime','meeting','utterance_length','interruption','interrupts_user','affirmation','affirms_user','influenced','influenced_by_user']
+df.to_csv(path + 'utterances_annotated.csv', index = None)
 
 
 #### Testing
