@@ -10,21 +10,21 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports/'
+path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
 
-dfinit = pd.read_csv (path+'all_utterances2.csv')
+dfinit = pd.read_csv (path+'all_utterancesGT.csv')
 dfinit['startTime'] =  pd.to_datetime(dfinit['startTime'])
 dfinit['endTime'] =  pd.to_datetime(dfinit['endTime'])
 
 dfinit = dfinit.sort_values(by=['startTime'])
 all_meetings = dfinit.meeting.unique()
 
-#smaller df for testing
-selected_meetings = all_meetings[:20]
-df = dfinit[(dfinit['meeting'].isin(selected_meetings))]
+# #smaller df for testing
+# selected_meetings = all_meetings[:20]
+# df = dfinit[(dfinit['meeting'].isin(selected_meetings))]
 
 #larger df for overall
-#df = dfinit
+df = dfinit
 
 #adding on a newish index for joins later
 dflen = df.shape[0]
@@ -132,7 +132,7 @@ df = df.join(In_User, lsuffix='myindex', rsuffix='myindex6')
 
 df = df.drop(['myindex','myindex1','myindex2','myindex3','myindex4','myindex5','myindex6'], axis=1)
 df.columns = ['_id','participant','startTime','endTime','meeting','utterance_length','interruption','interrupts_user','affirmation','affirms_user','influenced','influenced_by_user']
-df.to_csv(path + 'utterances_annotated.csv', index = None)
+df.to_csv(path + 'utterances_annotatedGT.csv', index = None)
 
 
 #### Testing

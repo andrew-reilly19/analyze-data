@@ -167,7 +167,7 @@ bb = pd.concat([with_best_buddy, without_best_buddy])
 meetingsdf = meetingsdf.merge(bb, left_on="meeting_name", right_on="meeting1")
 meetingsdf = meetingsdf.drop('meeting1', axis=1)
 
-df.to_csv(outpath + 'all_meetings_aggregates.csv', index = None)
+# df.to_csv(outpath + 'all_meetings_aggregates.csv', index = None)
 
 print("aggregating by month/weeks")
 #finally, creating one last document strictly meant for graphing purposes - these will be combined on
@@ -227,13 +227,14 @@ week_meetingsdf_TP = week_meetingsdf_TP.groupby(['meeting_year','meeting_week','
 month_meetingsdf_TP = month_meetingsdf_TP.groupby(['meeting_year','meeting_month', 'total_participants']).sum()
 
 
-week_meetingsdf_noUs.to_csv(outpath + 'week_none_aggregates.csv')
-month_meetingsdf_noUs.to_csv(outpath + 'month_none_aggregates.csv')
-week_meetingsdf_TC.to_csv(outpath + 'week_TC_aggregates.csv')
-month_meetingsdf_TC.to_csv(outpath + 'month_TC_aggregates.csv')
-week_meetingsdf_TP.to_csv(outpath + 'week_TP_aggregates.csv')
-month_meetingsdf_TP.to_csv(outpath + 'month_TP_aggregates.csv')
+# week_meetingsdf_noUs.to_csv(outpath + 'week_none_aggregates.csv')
+# month_meetingsdf_noUs.to_csv(outpath + 'month_none_aggregates.csv')
+# week_meetingsdf_TC.to_csv(outpath + 'week_TC_aggregates.csv')
+# month_meetingsdf_TC.to_csv(outpath + 'month_TC_aggregates.csv')
+# week_meetingsdf_TP.to_csv(outpath + 'week_TP_aggregates.csv')
+# month_meetingsdf_TP.to_csv(outpath + 'month_TP_aggregates.csv')
 
+print("User data processed, beginning overall data processing")
 
 #average of averages
 avg_meetingsdf = df.drop(["_id", "interrupts_user", "affirms_user", "influenced_by_user", 'startTime','endTime'], axis=1)
@@ -269,6 +270,42 @@ meeting_date2 = pd.DataFrame(list(meeting_date2.items()), columns=['meeting2','m
 avg_meetingsdf2 = avg_meetingsdf.merge(meeting_length2, how='left', left_on='meeting', right_on='meeting1')
 avg_meetingsdf2 = avg_meetingsdf2.merge(meeting_date2, how='left', left_on='meeting',right_on='meeting2')
 avg_meetingsdf2 = avg_meetingsdf2.drop(['meeting1','meeting2'],axis=1)
+
+#add number of users
+def add_nusers(row, meetDF):
+    meet = row['meeting']
+    smallmeetDF = meetDF[meetDF['meeting']==meet]
+    nusers = smallmeetDF.shape[0]
+    if nusers == 2:
+        return("2")
+    if nusers<=4:
+        return("3-4")
+    if nusers<=7:
+        return("5-7")
+    if nusers>7:
+        return("8+")
+
+avg_meetingsdf2['users_in_meeting'] =  avg_meetingsdf2.apply(lambda row: add_nusers(row, avg_meetingsdf2), axis=1)
+
+#user utterances divide by 60 (turn into minutes) and then get average by dividing by meeting mins
+avg_meetingsdf2['avg_user_time'] =  avg_meetingsdf2.apply(lambda row: (row['utterance_length']/60)/row['meetinglength'], axis=1)
+avg_meetingsdf2['interruption_avg'] =  avg_meetingsdf2.apply(lambda row: (row['interruption']/row['meetinglength']), axis=1)
+avg_meetingsdf2['affirmation_avg'] =  avg_meetingsdf2.apply(lambda row: (row['affirmation']/row['meetinglength']), axis=1)
+avg_meetingsdf2['influence_avg'] =  avg_meetingsdf2.apply(lambda row: (row['influenced']/row['meetinglength']), axis=1)
+
+#drop unnecessary data and aggregate all, write out
+avg_meeting_out1 = avg_meetingsdf2.drop(['meeting','participant','meetingdate','users_in_meeting', 'interruption','affirmation','influenced'], axis=1)
+avg_meeting_out1['group_obj'] = 1
+avg_meeting_out1 = avg_meeting_out1.groupby(['group_obj']).mean()
+
+avg_meeting_out1.to_csv(path + 'avg_meeting_stats.csv')
+
+#write out .csv file with average share of talking time per user by number of users
+avg_meeting_out2 = avg_meetingsdf2.drop(['meeting','participant','meetingdate','interruption','affirmation','influenced'], axis=1)
+avg_meeting_out2['group_obj'] = 1
+avg_meeting_out2 = avg_meeting_out2.groupby(['group_obj','users_in_meeting']).mean()
+
+avg_meeting_out2.to_csv(path + 'avg_meeting_stats_w_nusers.csv')
 
 '''
 need to aggregate the avg_meetingsdf2 data into average times for all users

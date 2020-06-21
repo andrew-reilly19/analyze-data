@@ -143,3 +143,4 @@ ENV/
 *.json
 user_reports/test.csv
 *.csv
+*.html

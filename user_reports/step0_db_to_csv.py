@@ -13,8 +13,8 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports/'
-df = pd.read_json (path+'utterances.json', lines=True)
+path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
+df = pd.read_json (path+'utterancesGT.json', lines=True)
 #print(df.dtypes)
 
 def cleanID(row):
@@ -63,7 +63,7 @@ for m in meetings:
 
 print(len(df.meeting.unique()))
 
-df.to_csv(path + 'all_utterances2.csv', index = None)
+df.to_csv(path + 'all_utterancesGT.csv', index = None)
 
 '''
 old method:
