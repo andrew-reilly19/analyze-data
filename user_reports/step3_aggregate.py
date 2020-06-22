@@ -9,18 +9,25 @@ Created on Fri May 22 09:45:30 2020
 import pandas as pd
 import numpy as np
 import datetime
+from datetime import date
 import os
 
 path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
 
-dfinit = pd.read_csv (path+'utterances_annotated.csv')
+dfinit = pd.read_csv (path+'utterances_annotated_S2_complete.csv')
 dfinit['startTime'] =  pd.to_datetime(dfinit['startTime'])
 dfinit['endTime'] =  pd.to_datetime(dfinit['endTime'])
 df = dfinit.sort_values(by=['startTime'])
 
+meeting_info = pd.read_csv(path+'meetings_processed.csv')
+meeting_info['real_start'] = pd.to_datetime(meeting_info['real_start'])
+meeting_info['real_end'] = pd.to_datetime(meeting_info['real_end'] )
+
+
 print('loaded data')
 
 '''
+STAGING USERS:
 For aggregate meeting stats, filter overall df by utterances for one specific user
     - Amy D : jMZgnpJrX1QwAN0oUkYNme9kD4b2
     - Beth : GcOHEObyGzTShEOpSzma6VpzT2Q2
@@ -29,24 +36,23 @@ For aggregate meeting stats, filter overall df by utterances for one specific us
     - Brec Hanson : i6T3a2s5WpPo1dxZaRmIJlkFn4m1
     - Jordan : SDzkCh0CetQsNw2gUZS5HPX2FCe2
 '''
-known_users = {'jMZgnpJrX1QwAN0oUkYNme9kD4b2':'Amy','GcOHEObyGzTShEOpSzma6VpzT2Q2':'Beth','V4Kc1uN0pgP7oVhaDjcmp6swV2F3':'Mike','FJwf8UtoqvRJ4jnAaqzV5hcfxAG3':'John','i6T3a2s5WpPo1dxZaRmIJlkFn4m1':'Brec','SDzkCh0CetQsNw2gUZS5HPX2FCe2':'Jordan'}
 
-select_participant = 'jMZgnpJrX1QwAN0oUkYNme9kD4b2' #Amy
+
+'''
+GT USERS: (from meeting FY20cohort2)
+    MLRP_207nuzZNLc8YvoV "Alena"
+    MLRP_b8eXeA6wOsLaTGZ "Brian"
+    MLRP_4Z6SeqiBce2rVZP "Marc"
+    MLRP_9QQIU5xv6Vbferb "Jarred"
+'''
+known_users = {'MLRP_207nuzZNLc8YvoV':'Alena','MLRP_b8eXeA6wOsLaTGZ':'Brian','MLRP_4Z6SeqiBce2rVZP':'Marc','MLRP_9QQIU5xv6Vbferb':'Jarred'}
+
+select_participant = 'MLRP_207nuzZNLc8YvoV'
 
 #only looking at meetings this participant was in
 meetings = dfinit[dfinit['participant']==select_participant].meeting.unique()
 meetingsdf = pd.DataFrame(meetings)
 
-meeting_length = []
-meeting_date = []
-meeting_user_count = []
-user_speaking_time = []
-user_interruptions = []
-user_affirmations = []
-user_influenced = []
-user_interrupted = []
-user_affirmed = []
-user_influences = []
 
 all_participants = df.participant.unique()
 ap_dict = {key: 0 for key in all_participants}
@@ -56,20 +62,24 @@ ap_dict = {key: 0 for key in all_participants}
 
 counter = 0
 total_meet = len(meetings)
+list_of_dicts=[]
 for meeting in meetings:
+    temp_dict={}
     intermediateDF = df[df['meeting']==meeting]
+    m_info = meeting_info[meeting_info['meeting']==meeting]
     #meeting
-    m_start = intermediateDF.startTime.min()
-    m_end = intermediateDF.endTime.max()
+    m_start = m_info['real_start'].min()
+    m_end = m_info['real_end'].max()
     m_date = m_start.date()
-    meeting_date.append(m_date)
     #meeting length
     meeting_length_mins = ((m_end-m_start).total_seconds())/60
-    meeting_length.append(meeting_length_mins)
+    temp_dict['meeting']=meeting
+    temp_dict['meeting_length']=round(meeting_length_mins,4)
+    temp_dict['meeting_date']=m_date
     #number of participants
     users = intermediateDF.participant.unique()
     n_users = len(users)
-    meeting_user_count.append(n_users)
+    temp_dict['user_count']=n_users
     for u in users:
         ap_dict[u] += 1
 
@@ -77,44 +87,34 @@ for meeting in meetings:
     userDF = intermediateDF[intermediateDF['participant']==select_participant]
     #speaking time
     user_total_time = userDF.utterance_length.sum()
-    user_speaking_time.append(user_total_time)
+    temp_dict['user_speaking_time']=round(user_total_time/60,4)
     #interruption count
     interruptions = userDF.interruption.sum()
-    user_interruptions.append(interruptions)
+    temp_dict['user_interruptions']=interruptions
     #affirmations count
     affirmations = userDF.affirmation.sum()
-    user_affirmations.append(affirmations)
+    temp_dict['user_affirmations']=affirmations
     #influenced by other user
     influenced = userDF.influenced.sum()
-    user_influenced.append(influenced)
+    temp_dict['user_influenced']=influenced
 
     #interrupted by other user
     interrupted = intermediateDF[intermediateDF['interrupts_user']==select_participant].shape[0]
-    user_interrupted.append(interrupted)
+    temp_dict['user_interrupted']=interrupted
     #affirmed by other user
     affirmed = intermediateDF[intermediateDF['affirms_user']==select_participant].shape[0]
-    user_affirmed.append(affirmed)
+    temp_dict['user_affirmed']=affirmed
     #influences other user
     influences = intermediateDF[intermediateDF['influenced_by_user']==select_participant].shape[0]
-    user_influences.append(influences)
+    temp_dict['user_influences']=influences
+
+    list_of_dicts.append(temp_dict)
     counter += 1
     print(counter, ' / ', total_meet)
 
 print('finalizing new dataframe...')
 
-meeting_length = pd.DataFrame(meeting_length)
-meeting_date = pd.DataFrame(meeting_date)
-meeting_user_count = pd.DataFrame(meeting_user_count)
-user_speaking_time = pd.DataFrame(user_speaking_time)
-user_interruptions = pd.DataFrame(user_interruptions)
-user_affirmations = pd.DataFrame(user_affirmations)
-user_influenced = pd.DataFrame(user_influenced)
-user_interrupted = pd.DataFrame(user_interrupted)
-user_affirmed = pd.DataFrame(user_affirmed)
-user_influences = pd.DataFrame(user_influences)
-
-meetingsdf = pd.concat([meetingsdf, meeting_length, meeting_date, meeting_user_count, user_speaking_time, user_interruptions], axis=1)
-meetingsdf = pd.concat([meetingsdf, user_affirmations, user_influenced, user_interrupted, user_affirmed, user_influences], axis=1)
+meetingsdf = pd.DataFrame(list_of_dicts)
 meetingsdf.columns = ['meeting_name','meeting_length_mins','meeting_date','total_participants','SU_speaking_time','SU_interruptions','SU_affirmations','SU_influenced_by','SU_interrupted','SU_affirmed','SU_influences']
 
 
@@ -227,14 +227,25 @@ week_meetingsdf_TP = week_meetingsdf_TP.groupby(['meeting_year','meeting_week','
 month_meetingsdf_TP = month_meetingsdf_TP.groupby(['meeting_year','meeting_month', 'total_participants']).sum()
 
 
-# week_meetingsdf_noUs.to_csv(outpath + 'week_none_aggregates.csv')
-# month_meetingsdf_noUs.to_csv(outpath + 'month_none_aggregates.csv')
-# week_meetingsdf_TC.to_csv(outpath + 'week_TC_aggregates.csv')
-# month_meetingsdf_TC.to_csv(outpath + 'month_TC_aggregates.csv')
-# week_meetingsdf_TP.to_csv(outpath + 'week_TP_aggregates.csv')
-# month_meetingsdf_TP.to_csv(outpath + 'month_TP_aggregates.csv')
+week_meetingsdf_noUs.to_csv(outpath + 'week_none_aggregates.csv')
+month_meetingsdf_noUs.to_csv(outpath + 'month_none_aggregates.csv')
+week_meetingsdf_TC.to_csv(outpath + 'week_TC_aggregates.csv')
+month_meetingsdf_TC.to_csv(outpath + 'month_TC_aggregates.csv')
+week_meetingsdf_TP.to_csv(outpath + 'week_TP_aggregates.csv')
+month_meetingsdf_TP.to_csv(outpath + 'month_TP_aggregates.csv')
 
 print("User data processed, beginning overall data processing")
+
+
+
+
+
+'''
+meeting averages data
+'''
+
+
+
 
 #average of averages
 avg_meetingsdf = df.drop(["_id", "interrupts_user", "affirms_user", "influenced_by_user", 'startTime','endTime'], axis=1)
