@@ -7,6 +7,9 @@ Created on Fri May 22 09:45:30 2020
 
 This is the original conversion file I wrote, it could still use some optimization, though. It
 is very rough and loops through the entire array of utterances multiple times.
+
+This takes approximately 5 mins to complete with the large database (staging.riff)
+This takes approximately 30 sec to complete with a medium database (gt.riff)
 """
 
 import pandas as pd
@@ -30,12 +33,19 @@ def cleanDate(row, toggle):
     val = cell.get("$date")
     return val
 
+print("extracting ID...")
 df['_id'] = df.apply(lambda row: cleanID(row), axis=1)
+print("extracting Starttime")
 df['startTime'] = df.apply(lambda row: cleanDate(row, toggle = 0), axis=1)
+print("extracting Endtime")
 df['endTime'] = df.apply(lambda row: cleanDate(row, toggle = 1), axis=1)
+print("converting to datetime format...")
 df['startTime'] =  pd.to_datetime(df['startTime'])
 df['endTime'] =  pd.to_datetime(df['endTime'])
 df = df.drop(['volumes','__v'], axis=1)
+
+print("initial cleaning done")
+print("processing utterance lengths...")
 
 def utterancelength(row):
     start = row['startTime']
@@ -44,6 +54,8 @@ def utterancelength(row):
     return(u_len.total_seconds())
 
 df["Utterance_Length_secs"] = df.apply(lambda row: utterancelength(row), axis=1)
+
+print("removing 0 length utterances...")
 df = df[df['Utterance_Length_secs']>0]
 df = df[df.meeting.notnull()]
 
@@ -52,9 +64,10 @@ meetings = df.meeting.unique()
 def meeting_participants(m):
     meetingdf = df[df.meeting == m]
     users = meetingdf.participant.unique()
-    print(len(users))
+    #print(len(users))
     return len(users)
 
+print("dropping single-user meetings")
 one_user_meetings = []
 for m in meetings:
     nusers = meeting_participants(m)
@@ -63,7 +76,9 @@ for m in meetings:
 
 print(len(df.meeting.unique()))
 
-df.to_csv(path + 'all_utterancesGT.csv', index = None)
+print("writing out data")
+
+df.to_csv(path + 'all_utterances_S0_complete.csv', index = None)
 
 '''
 old method:

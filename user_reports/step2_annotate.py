@@ -10,9 +10,9 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
+path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports/'
 
-dfinit = pd.read_csv (path+'all_utterancesGT.csv')
+dfinit = pd.read_csv (path+'knit_utterances_S1_complete.csv')
 dfinit['startTime'] =  pd.to_datetime(dfinit['startTime'])
 dfinit['endTime'] =  pd.to_datetime(dfinit['endTime'])
 
@@ -132,7 +132,7 @@ df = df.join(In_User, lsuffix='myindex', rsuffix='myindex6')
 
 df = df.drop(['myindex','myindex1','myindex2','myindex3','myindex4','myindex5','myindex6'], axis=1)
 df.columns = ['_id','participant','startTime','endTime','meeting','utterance_length','interruption','interrupts_user','affirmation','affirms_user','influenced','influenced_by_user']
-df.to_csv(path + 'utterances_annotatedGT.csv', index = None)
+df.to_csv(path + 'utterances_annotated_S2_complete.csv', index = None)
 
 
 #### Testing
