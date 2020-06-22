@@ -68,11 +68,18 @@ for m in all_meetings:
     max_users = intDF.participants.max()
     raw_start = intDF.timestamp.min()
     raw_end = intDF.timestamp.max()
-    #start rule is half + 1 (or half round-up)
-    user_threshold = round((max_users/2+.5),0)
-    intDF2 = intDF[intDF['participants']>=user_threshold]
+    #start rule is half + 1 (or half round-up) for less than 6 users and half of the users for more than 6
+    if max_users >= 6:
+        start_threshold = round(max_users/2,0)
+    if max_users < 6:
+        start_threshold = round((max_users/2+.5),0)
+    #start_threshold = round((max_users/2+.5),0)
+    #end_threshold = start_threshold-1
+    intDF2 = intDF[intDF['participants']>=start_threshold]
     real_start = intDF2.timestamp.min()
-    real_end = intDF2.timestamp.max()
+    post_RS = intDF2.timestamp.max()
+    intDF3 = intDF[(intDF['timestamp']>post_RS)&(intDF['participants']<=start_threshold)]
+    real_end = intDF3.timestamp.min()
     temp_dict['meeting']=m
     temp_dict['max_users']=max_users
     temp_dict['raw_start']=raw_start
@@ -81,6 +88,7 @@ for m in all_meetings:
     temp_dict['real_end']=real_end
     temp_dict['raw_end']=raw_end
     temp_dict['end_gap']=(raw_end-real_end).total_seconds()
+    temp_dict['meeting_length']=(real_end-real_start).total_seconds()/60
     newer_dicts.append(temp_dict)
 
 meeting_DF = pd.DataFrame(newer_dicts)

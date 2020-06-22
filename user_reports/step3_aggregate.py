@@ -262,9 +262,10 @@ counter = 0
 total_meet = len(meetings_small)
 for meeting in meetings_small:
     intermediateDF = df[df['meeting']==meeting]
+    m_info = meeting_info[meeting_info['meeting']==meeting]
     #meeting
-    m_start = intermediateDF.startTime.min()
-    m_end = intermediateDF.endTime.max()
+    m_start = m_info['real_start'].min()
+    m_end = m_info['real_end'].max()
     m_date = m_start.date()
     meeting_date2[meeting]=m_date
     #meeting length
@@ -283,10 +284,10 @@ avg_meetingsdf2 = avg_meetingsdf2.merge(meeting_date2, how='left', left_on='meet
 avg_meetingsdf2 = avg_meetingsdf2.drop(['meeting1','meeting2'],axis=1)
 
 #add number of users
-def add_nusers(row, meetDF):
+def add_nusers(row):
     meet = row['meeting']
-    smallmeetDF = meetDF[meetDF['meeting']==meet]
-    nusers = smallmeetDF.shape[0]
+    m_info = meeting_info[meeting_info['meeting']==meet]
+    nusers = m_info.iloc[0]['max_users']
     if nusers == 2:
         return("2")
     if nusers<=4:
@@ -296,7 +297,7 @@ def add_nusers(row, meetDF):
     if nusers>7:
         return("8+")
 
-avg_meetingsdf2['users_in_meeting'] =  avg_meetingsdf2.apply(lambda row: add_nusers(row, avg_meetingsdf2), axis=1)
+avg_meetingsdf2['users_in_meeting'] =  avg_meetingsdf2.apply(lambda row: add_nusers(row), axis=1)
 
 #user utterances divide by 60 (turn into minutes) and then get average by dividing by meeting mins
 avg_meetingsdf2['avg_user_time'] =  avg_meetingsdf2.apply(lambda row: (row['utterance_length']/60)/row['meetinglength'], axis=1)
