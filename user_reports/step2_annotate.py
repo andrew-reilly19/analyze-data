@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports/'
+path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
 
 dfinit = pd.read_csv (path+'knit_utterances_S1_complete.csv')
 dfinit['startTime'] =  pd.to_datetime(dfinit['startTime'])
@@ -52,11 +52,22 @@ def annotate_interruption(target_start, target_end, target_user, target_len, ind
 def annotate_affirmations(target_start, target_end, target_user, target_len, indiv_meetingDF):
     affirmflag = 0
     affirms_user = ""
-    if (target_len <= 2) & (target_len > .25):
+    if target_len >= .25:
         #print('length condition met')
         #3 conditions - A speaks while B is speaking, there is at least a quarter second overlap, and A stops before B
-        #interDF = indiv_meetingDF[((indiv_meetingDF['endTime']-target_start).total_seconds()>.25) & (indiv_meetingDF['endTime']>target_end) & (indiv_meetingDF['participant']!= target_user)]
-        interDF = indiv_meetingDF[(indiv_meetingDF['startTime']<target_start) & (indiv_meetingDF['endTime']+timedelta(seconds=1)>target_end) & (indiv_meetingDF['participant']!= target_user)]# & (indiv_meetingDF['Utterance_Length_secs']>2)]
+        interDF = indiv_meetingDF[(indiv_meetingDF['startTime']<target_start) & (indiv_meetingDF['endTime']>target_end) & (indiv_meetingDF['participant']!= target_user)]
+        '''
+        interDF = indiv_meetingDF[(indiv_meetingDF['startTime']<target_start)]
+        print(interDF.shape[0])
+        print(target_end)
+        if(interDF.shape[0]>0):
+            print(interDF.iloc[0]['endTime'])
+        interDF = interDF[(interDF['endTime']>target_end)]
+        print(interDF.shape[0])
+        interDF = interDF[(interDF['participant'] != target_user)]
+        print(interDF.shape[0])
+        '''
+        #interDF = indiv_meetingDF[(indiv_meetingDF['startTime']<target_start) & (indiv_meetingDF['endTime']+timedelta(seconds=1)>target_end) & (indiv_meetingDF['participant']!= target_user)]# & (indiv_meetingDF['Utterance_Length_secs']>2)]
         if interDF.shape[0] > 0:
             affirmflag = 1
             affirms_user = interDF.iloc[0]['participant']
@@ -77,8 +88,8 @@ def annotate_influence(target_start, target_user, target_len, indiv_meetingDF):
 def overall_annotation_function(row, max_utterance):
     #getting intermediate dataframe - all possible intersecting utterances within max utterance length + 3 sec
     start_bracket = row['startTime']-timedelta(seconds=max_utterance+3.001)
-    end_bracket = row['endTime']
-    im_df = df[(df['startTime']>start_bracket) & (df['endTime']<end_bracket)]
+    #end_bracket = row['endTime']
+    im_df = df[(df['startTime']>start_bracket)]# & (df['endTime']<end_bracket)]
     row_start = row['startTime']
     row_end = row['endTime']
     row_user = row['participant']

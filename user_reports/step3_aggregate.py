@@ -11,7 +11,7 @@ import numpy as np
 import datetime
 import os
 
-path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports/'
+path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
 
 dfinit = pd.read_csv (path+'utterances_annotated.csv')
 dfinit['startTime'] =  pd.to_datetime(dfinit['startTime'])

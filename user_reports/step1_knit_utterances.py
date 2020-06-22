@@ -44,15 +44,16 @@ new_meeting = {}
 new_UL = {}
 
 def write_out(index_num, row, e_time):
-    new_id[index_num] = row._id
-    new_participant[index_num] = row.participant
-    new_startTime[index_num] = row.startTime
+    new_id[index_num] = row['_id']
+    new_participant[index_num] = row['participant']
+    new_startTime[index_num] = row['startTime']
     new_endTime[index_num] = e_time
-    new_meeting[index_num] = row.meeting
-    new_UL[index_num] = e_time-row.startTime
-
+    new_meeting[index_num] = row['meeting']
+    U_length = e_time-row['startTime']
+    new_UL[index_num] = U_length.total_seconds()
 
 print("beginning big loop...")
+
 #iterate over each meeting
 tot_meetings = all_meetings.shape[0]
 count_meetings = 1
