@@ -16,8 +16,8 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
-df = pd.read_json (path+'utterancesGT.json', lines=True)
+path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports_riffai/'
+df = pd.read_json (path+'utterancesRAI.json', lines=True)
 #print(df.dtypes)
 
 def cleanID(row):
@@ -56,7 +56,7 @@ def utterancelength(row):
 df["Utterance_Length_secs"] = df.apply(lambda row: utterancelength(row), axis=1)
 
 print("removing 0 length utterances...")
-df = df[df['Utterance_Length_secs']>0]
+#df = df[df['Utterance_Length_secs']>0]
 df = df[df.meeting.notnull()]
 
 meetings = df.meeting.unique()
@@ -78,7 +78,7 @@ print(len(df.meeting.unique()))
 
 print("writing out data")
 
-df.to_csv(path + 'all_utterances_S0_complete.csv', index = None)
+df.to_csv(path + 'all_utterances_S0_complete_w_0s.csv', index = None)
 
 '''
 old method:

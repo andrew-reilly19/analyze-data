@@ -15,8 +15,8 @@ import numpy as np
 from datetime import datetime, timedelta
 import json
 
-path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/participanteventsGT.json'
-outpath = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
+path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports_riffai/participanteventsRAI.json'
+outpath = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports_riffai/'
 
 '''
 reading data into dataframe
@@ -96,19 +96,19 @@ testDF = meeting_DF[meeting_DF['max_users']>1]
 
 #average start gap (mins)
 ASG = testDF.start_gap.mean()/60
-print("Average Start Gap: ",ASG)
+print("Average Start Gap: ",round(ASG, 2),' mins')
 
 #average end gap (mins)
 AEG = testDF.end_gap.mean()/60
-print("Average End Gap: ",AEG)
+print("Average End Gap: ",round(AEG, 2), ' mins')
 
 #average raw meeting time (mins)
 ARMT = (testDF['raw_end']-testDF['raw_start']).mean()
-print("Average Raw Meeting Time: ",ARMT.total_seconds()/60)
+print("Average Raw Meeting Time: ",round((ARMT.total_seconds()/60),2),' mins')
 
 #average true meeting time (mins)
 ATMT = (testDF['real_end']-testDF['real_start']).mean()
-print("Average True Meeting Time: ",ATMT.total_seconds()/60)
+print("Average True Meeting Time: ",round((ATMT.total_seconds()/60),2),' mins')
 
 print("(Note: all times in minutes and only meetings with at least 2 users was counted)")
 

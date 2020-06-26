@@ -19,11 +19,13 @@ dfinit['startTime'] =  pd.to_datetime(dfinit['startTime'])
 dfinit['endTime'] =  pd.to_datetime(dfinit['endTime'])
 df = dfinit.sort_values(by=['startTime'])
 
+dfraw = pd.read_csv (path+'all_utterances_S0_complete_w_0s.csv')
+
 meeting_info = pd.read_csv(path+'meetings_processed.csv')
 meeting_info['real_start'] = pd.to_datetime(meeting_info['real_start'])
 meeting_info['real_end'] = pd.to_datetime(meeting_info['real_end'] )
 
-
+'''
 mecheck = df.meeting.unique()
 mecheck = np.array(mecheck)
 mecheck = np.sort(mecheck)
@@ -45,6 +47,7 @@ research1['utterance_share'] = research1.apply(lambda row: (row['utterance_lengt
 
 
 users = research1.participant.unique()
+'''
 
 print('loaded data')
 
@@ -79,9 +82,9 @@ Riff AI USERS:
 
 #known_users = {'MLRP_207nuzZNLc8YvoV':'A','MLRP_b8eXeA6wOsLaTGZ':'B','MLRP_4Z6SeqiBce2rVZP':'M','MLRP_9QQIU5xv6Vbferb':'J'}
 
-known_users = {}
+known_users = {'q94yeKPfA7Nf6kp8JQ69NFQ0rQw2':'Burcin', 'mGZGS6HsATg0nwArrRoXF9yYiuF3':'Andrew', 'G0DAHoX1U8hbz1IefV2Vq3TmOy72':'Beth', 'JUQuvggv76ctK1nJNOWvkkf3McT2':'Jordan', 'V4Kc1uN0pgP7oVhaDjcmp6swV2F3':'Mike'}
 
-select_participant = 'MLRP_207nuzZNLc8YvoV'
+select_participant = 'mGZGS6HsATg0nwArrRoXF9yYiuF3'
 
 #only looking at meetings this participant was in
 meetings = dfinit[dfinit['participant']==select_participant].meeting.unique()

@@ -15,8 +15,10 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
+path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports_riffai/'
 dfinit = pd.read_csv (path+'all_utterances_S0_complete.csv')
+
+
 dfinit['startTime'] =  pd.to_datetime(dfinit['startTime'])
 dfinit['endTime'] =  pd.to_datetime(dfinit['endTime'])
 
@@ -27,8 +29,10 @@ all_meetings = dfinit.meeting.unique()
 '''
 number of seconds between utterances allowed:
 '''
-max_gap_seconds = 2
+max_gap_seconds = 1
 max_gap = timedelta(seconds=max_gap_seconds)
+
+
 
 
 df = dfinit
@@ -126,6 +130,7 @@ df_out = df_out.join(new_UL, lsuffix='myindex1', rsuffix='myindex6')
 
 df_out = df_out.drop(['myindex1','myindex2','myindex3','myindex4','myindex5','myindex6'], axis=1)
 df_out = df_out.sort_values(by=['startTime'])
+
 
 df_out.to_csv(path + 'knit_utterances_S1_complete.csv', index = None)
 
