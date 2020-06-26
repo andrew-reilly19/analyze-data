@@ -28,17 +28,21 @@ mecheck = df.meeting.unique()
 mecheck = np.array(mecheck)
 mecheck = np.sort(mecheck)
 
-research1 = dfinit[dfinit['meeting']=='research-2']
+#research1 = dfinit[dfinit['meeting']=='research-2']
 #research1 = dfinit[dfinit['meeting']=='research-5']
-#research1 = dfinit[dfinit['meeting']=='research-10']
+research1 = dfinit[dfinit['meeting']=='research-10']
 # mindate = research1.startTime.min()
 # maxdate = research1.endTime.max()
 # meet_length = maxdate-mindate
 # meet_length = meet_length.total_seconds()
 
+research1.shape[0]
+
 research1 = research1.drop(['_id','startTime','endTime','meeting','affirms_user', 'interrupts_user','influenced_by_user'], axis=1)
 research1 = research1.groupby(['participant']).sum()
 research1 = research1.sort_values(by=['utterance_length'])
+
+
 
 tot_utts = research1.utterance_length.sum()
 research1['utterance_share'] = research1.apply(lambda row: (row['utterance_length']/tot_utts*100), axis=1)

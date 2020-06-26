@@ -56,7 +56,7 @@ def utterancelength(row):
 df["Utterance_Length_secs"] = df.apply(lambda row: utterancelength(row), axis=1)
 
 print("removing 0 length utterances...")
-#df = df[df['Utterance_Length_secs']>0]
+df = df[df['Utterance_Length_secs']>0]
 df = df[df.meeting.notnull()]
 
 meetings = df.meeting.unique()
@@ -78,7 +78,7 @@ print(len(df.meeting.unique()))
 
 print("writing out data")
 
-df.to_csv(path + 'all_utterances_S0_complete_w_0s.csv', index = None)
+df.to_csv(path + 'all_utterances_S0_complete.csv', index = None)
 
 '''
 old method:

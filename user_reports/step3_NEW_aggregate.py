@@ -11,6 +11,7 @@ import numpy as np
 import datetime
 from datetime import date
 import os
+import matplotlib.pyplot as plt
 
 path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
 
@@ -18,6 +19,23 @@ dfinit = pd.read_csv (path+'utterances_annotated_S2_complete.csv')
 dfinit['startTime'] =  pd.to_datetime(dfinit['startTime'])
 dfinit['endTime'] =  pd.to_datetime(dfinit['endTime'])
 df = dfinit.sort_values(by=['startTime'])
+
+# dftesty = dfinit.drop(['_id','startTime','endTime','meeting','utterance_length','interruption','affirmation','influenced'], axis=1)
+
+# def selfcheck(row):
+#     flag = 0
+#     user = row['participant']
+#     if row['interrupts_user']==user:
+#         flag = 1
+#     if row['affirms_user']==user:
+#         flag=1
+#     if row['influenced_by_user']==user:
+#         flag=1
+#     return flag
+
+# dftesty['self_flag'] = dftesty.apply(lambda row: (selfcheck(row)), axis=1)
+
+# dftesty = dftesty[dftesty['self_flag']==1]
 
 dfraw = pd.read_csv (path+'all_utterances_S0_complete_w_0s.csv')
 dfraw['startTime'] =  pd.to_datetime(dfraw['startTime'])
@@ -90,10 +108,6 @@ known_users = {'MLRP_207nuzZNLc8YvoV':'A','MLRP_b8eXeA6wOsLaTGZ':'B','MLRP_4Z6Se
 
 select_participant = 'MLRP_207nuzZNLc8YvoV'
 
-#only looking at meetings this participant was in
-meetings = dfinit[dfinit['participant']==select_participant].meeting.unique()
-meetingsdf = pd.DataFrame(meetings)
-
 
 '''
 This section figures out the first plots, on user speaking time.  This should be converted from a single-user approach to a
@@ -105,9 +119,17 @@ and dividing that by the total meeting time.  Once each user has a percentage pr
 user count.
 '''
 #first, getting dynamic user count to create the 'ideal' speaking time for each meeting
-p_meetings = dfraw[dfraw['participant']==select_participant].meeting.unique()
+p_meet = dfraw[dfraw['participant']==select_participant].meeting.unique()
+p_meetings = []
+#dropping meetings with only 1 user and less than 5 mins (likely not the main meeting)
+for m in p_meet:
+    meettest = meeting_info[meeting_info['meeting']==m]
+    if (meettest.iloc[0]['max_users'] > 1) & (meettest.iloc[0]['meeting_length']>5):
+        p_meetings.append(m)
+
+
+#loop to find the ideal speaking time per meeting
 d_nusers = {}
-our_user = {}
 for mtg in p_meetings:
     dfraw2 = dfraw[dfraw['meeting']==mtg]
     #here we filter by what we assume to be the 'real start' and 'real end'
@@ -125,19 +147,80 @@ for mtg in p_meetings:
         u_time = (u_max-u_min).total_seconds()
         u_percent = u_time/full_meeting_time
         dynamic_nusers = dynamic_nusers + u_percent
-        if user == select_participant:
-            our_user[mtg] = u_percent
     #print(dynamic_nusers)
     ideal_time = 100/dynamic_nusers
     d_nusers[mtg] = ideal_time
 
 #creating dataframe of ideal speaking time
-meeting_nusers_dynamic = pd.DataFrame(list(d_nusers.items()), columns=['meeting','ideal_speaking_time'])
-our_user = pd.DataFrame(list(our_user.items()), columns = ['meeting1','actual_speaking_time'])
-meeting_stats = meeting_nusers_dynamic.merge(our_user, left_on='meeting',right_on='meeting1')
-meeting_stats = meeting_stats.drop('meeting1', axis=1)
+meeting_ideal = pd.DataFrame(list(d_nusers.items()), columns=['meeting1','ideal_speaking_time'])
+
+print("Ideal speaking times found")
+
+#trimming the meeting utterancews for later
+total_meeting_data = df[df.meeting.isin(p_meetings)]
+
+def trim_utterance_prep(row):
+    flag = 0
+    mtg_info = meeting_info[meeting_info['meeting']==row['meeting']]
+    if (row['startTime'] >= mtg_info.iloc[0]['real_start']) & (row['startTime'] <= mtg_info.iloc[0]['real_end']):
+        flag = 1
+    return flag
+
+total_meeting_data['trimflag'] = total_meeting_data.apply(lambda row: trim_utterance_prep(row), axis=1)
+trimmed_meeting_data = total_meeting_data[total_meeting_data['trimflag']==1]
+trimmed_meeting_data = trimmed_meeting_data.drop(['_id','trimflag','interrupts_user','affirms_user','influenced_by_user', 'startTime','endTime'], axis=1)
+
+print("Utterances Trimmed")
+#Trimmed and aggregate meeting data here will be used for the rest of the plotting
+
+agg_meeting_data = trimmed_meeting_data.groupby(['participant','meeting']).sum().reset_index()
+
+def get_speaking_percentage(row, thisdf):
+    thisdf2 = thisdf[thisdf['meeting']==row['meeting']]
+    tot_utt_length = thisdf2.utterance_length.sum()
+    user_SP = row['utterance_length']
+    return (user_SP/tot_utt_length*100)
+
+agg_meeting_data['speaking_percentage'] = agg_meeting_data.apply(lambda row: (get_speaking_percentage(row, agg_meeting_data)), axis=1)
+
+print("Finalizing dataframe")
+
+all_meeting_data = agg_meeting_data.merge(meeting_ideal, left_on='meeting',right_on='meeting1')
+
+def add_date(row):
+    rowmeet = row['meeting']
+    rowdate = meeting_info[meeting_info['meeting']==rowmeet].iloc[0]['real_start'].strftime("%B %-d")
+    return(rowdate)
+
+all_meeting_data['date'] = all_meeting_data.apply(lambda row: add_date(row), axis=1)
+all_meeting_data = all_meeting_data.drop('meeting1', axis=1)
+
+print("Producing plots")
+
+our_user = all_meeting_data[all_meeting_data['participant']==select_participant]
+our_user.set_index('date', inplace=True)
+#our_user = our_user.sort_values(by=['date'])
+
+outpath = path+select_participant+'/'
+
+if not os.path.exists(outpath):
+    os.mkdir(outpath)
+
+fig1 = plt.figure(figsize=(7,4))
+our_user['speaking_percentage'].plot(color = 'blue', linewidth=2.0, use_index=True, label='You')
+our_user['ideal_speaking_time'].plot(kind='bar', color = 'grey', use_index=True, label='Ideal')
+plt.xlabel('Date')
+plt.ylabel('% Speaking Time')
+plt.legend(loc="best")
+fig1.savefig(outpath+'img1.png',bbox_inches='tight')
+
+#example
+
+
 
 print('done!')
+
+
 
 
 '''

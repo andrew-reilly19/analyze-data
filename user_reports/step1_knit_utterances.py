@@ -15,7 +15,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports_riffai/'
+path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
 dfinit = pd.read_csv (path+'all_utterances_S0_complete.csv')
 
 
@@ -28,11 +28,10 @@ all_meetings = dfinit.meeting.unique()
 
 '''
 number of seconds between utterances allowed:
+    2 is what Riff currently uses
 '''
-max_gap_seconds = 1
+max_gap_seconds = 2
 max_gap = timedelta(seconds=max_gap_seconds)
-
-
 
 
 df = dfinit
@@ -96,14 +95,14 @@ for m in all_meetings:
                         n_rows = df3.shape[0]
                         break
                     #second check - if the utterances are far enough apart, write out the full utterance and filter
-                    if (check_row_time - compare_time) > max_gap:
+                    if (check_row_time - compare_time) >= max_gap:
                         write_out(new_index, reference_row, compare_time)
                         df3 = df3[df3['startTime']>compare_time]
                         new_index += 1
                         n_rows = df3.shape[0]
                         break
                     #third check - if the utterances aren't far enough apart, take new end time and try again
-                    if (check_row_time - compare_time) <= max_gap:
+                    if (check_row_time - compare_time) < max_gap:
                         compare_time = check_row['endTime']
                         row_check_num += 1
 
