@@ -86,11 +86,15 @@ For aggregate meeting stats, filter overall df by utterances for one specific us
 
 
 '''
-GT USERS: (from meeting FY20cohort2)
+GT USERS: (from meetings FY20cohort2)
     MLRP_207nuzZNLc8YvoV "Alena"
     MLRP_b8eXeA6wOsLaTGZ "Brian"
     MLRP_4Z6SeqiBce2rVZP "Marc"
     MLRP_9QQIU5xv6Vbferb "Jarred"
+    MLRP_2lb2J9sL14bWiLr "Tamara"
+    MLRP_2tOntZytvl6j4a1 "Gina"
+    MLRP_8kT5pkyD7bYIkm1 "Andrew"
+
 '''
 
 '''
@@ -102,7 +106,7 @@ Riff AI USERS:
     V4Kc1uN0pgP7oVhaDjcmp6swV2F3 : Mike
 '''
 
-known_users = {'MLRP_207nuzZNLc8YvoV':'A','MLRP_b8eXeA6wOsLaTGZ':'B','MLRP_4Z6SeqiBce2rVZP':'M','MLRP_9QQIU5xv6Vbferb':'J'}
+known_users = {'MLRP_207nuzZNLc8YvoV':'Alena','MLRP_b8eXeA6wOsLaTGZ':'Brian','MLRP_4Z6SeqiBce2rVZP':'Marc','MLRP_9QQIU5xv6Vbferb':'Jarred','MLRP_2lb2J9sL14bWiLr':'Tamara', 'MLRP_2tOntZytvl6j4a1':'Gina', 'MLRP_8kT5pkyD7bYIkm1':'Andrew'}
 
 #known_users = {'q94yeKPfA7Nf6kp8JQ69NFQ0rQw2':'Burcin', 'mGZGS6HsATg0nwArrRoXF9yYiuF3':'Andrew', 'G0DAHoX1U8hbz1IefV2Vq3TmOy72':'Beth', 'JUQuvggv76ctK1nJNOWvkkf3McT2':'Jordan', 'V4Kc1uN0pgP7oVhaDjcmp6swV2F3':'Mike'}
 
@@ -206,19 +210,140 @@ outpath = path+select_participant+'/'
 if not os.path.exists(outpath):
     os.mkdir(outpath)
 
+#TODO: need to make these lines curvy instead of jagged
+
 fig1 = plt.figure(figsize=(7,4))
-our_user['speaking_percentage'].plot(color = 'blue', linewidth=2.0, use_index=True, label='You')
-our_user['ideal_speaking_time'].plot(kind='bar', color = 'grey', use_index=True, label='Ideal')
+our_user['speaking_percentage'].plot(color = 'dodgerblue', linewidth=2.0, use_index=True, label='You')
+our_user['ideal_speaking_time'].plot(kind='bar', color = 'chocolate', use_index=True, label='Ideal')
 plt.xlabel('Date')
 plt.ylabel('% Speaking Time')
 plt.legend(loc="best")
 fig1.savefig(outpath+'img1.png',bbox_inches='tight')
-
-#example
-
+plt.close(fig1)
 
 
-print('done!')
+fig2 = plt.figure(figsize=(7,4))
+our_user['interruption'].plot(color='firebrick',linewidth=2.0, use_index=True)
+plt.xlabel('Date')
+plt.ylabel('Interruptions')
+plt.xticks(rotation='vertical')
+fig2.savefig(outpath+'img2.png',bbox_inches='tight')
+plt.close(fig2)
+
+
+fig3 = plt.figure(figsize=(7,4))
+our_user['affirmation'].plot(color='forestgreen',linewidth=2.0, use_index=True)
+plt.xlabel('Date')
+plt.ylabel('Affirmations')
+plt.xticks(rotation='vertical')
+fig3.savefig(outpath+'img3.png',bbox_inches='tight')
+plt.close(fig3)
+
+
+#TODO: currently this shows the number of times they were influenced, not the other way around - needs to be fixed
+fig4 = plt.figure(figsize=(7,4))
+our_user['influenced'].plot(color='gold',linewidth=2.0, use_index=True)
+plt.xlabel('Date')
+plt.ylabel('Influences')
+plt.xticks(rotation='vertical')
+fig4.savefig(outpath+'img4.png',bbox_inches='tight')
+plt.close(fig4)
+
+print('first 4 plots complete')
+
+#Now onto the boxplots
+a_users = all_meeting_data.participant.unique()
+imp_users = [select_participant]
+for user in a_users:
+    if user != select_participant:
+        udf = all_meeting_data[all_meeting_data['participant']==user]
+        if udf.shape[0]>1:
+            imp_users.append(user)
+
+
+speaking_time = []
+interruptions = []
+affirmations = []
+influences = []
+user_name = ['You!']
+
+for user in imp_users:
+    udf = all_meeting_data[all_meeting_data['participant']==user]
+    sp_list = udf['speaking_percentage'].to_list()
+    int_list = udf['interruption'].to_list()
+    aff_list = udf['affirmation'].to_list()
+    inf_list = udf['influenced'].to_list()
+    speaking_time.append(sp_list)
+    interruptions.append(int_list)
+    affirmations.append(aff_list)
+    influences.append(inf_list)
+    if user != select_participant:
+        user_name.append(known_users.get(user))
+
+
+
+fig5 = plt.figure(1, figsize=(7,4))
+ax5 = fig5.add_subplot(111)
+bp5 = ax5.boxplot(speaking_time,patch_artist=True, meanline=True)
+ax5.set_xticklabels(user_name, rotation='vertical')
+plt.xlabel('Teammate')
+plt.ylabel('Speaking Time %')
+for box in bp5['boxes']:
+    # change fill color
+    box.set( facecolor = 'royalblue' )
+## change color and linewidth of the medians
+for mean in bp5['means']:
+    mean.set(color='black', linewidth=2)
+fig5.savefig(outpath+'img5.png',bbox_inches='tight')
+plt.close(fig5)
+
+
+fig6 = plt.figure(1, figsize=(7,4))
+ax6 = fig6.add_subplot(111)
+bp6 = ax6.boxplot(interruptions,patch_artist=True, meanline=True)
+ax6.set_xticklabels(user_name, rotation='vertical')
+plt.xlabel('Teammate')
+plt.ylabel('Interruptions')
+for box in bp6['boxes']:
+    # change fill color
+    box.set( facecolor = 'firebrick' )
+## change color and linewidth of the medians
+for mean in bp6['means']:
+    mean.set(color='black', linewidth=2)
+fig6.savefig(outpath+'img6.png',bbox_inches='tight')
+plt.close(fig6)
+
+fig7 = plt.figure(1, figsize=(7,4))
+ax7 = fig7.add_subplot(111)
+bp7 = ax7.boxplot(affirmations,patch_artist=True, meanline=True)
+ax7.set_xticklabels(user_name, rotation='vertical')
+plt.xlabel('Teammate')
+plt.ylabel('Affirmations')
+for box in bp7['boxes']:
+    # change fill color
+    box.set( facecolor = 'forestgreen' )
+## change color and linewidth of the medians
+for mean in bp7['means']:
+    mean.set(color='black', linewidth=2)
+fig7.savefig(outpath+'img7.png',bbox_inches='tight')
+plt.close(fig7)
+
+fig8 = plt.figure(1, figsize=(7,4))
+ax8 = fig8.add_subplot(111)
+bp8 = ax8.boxplot(influences,patch_artist=True, meanline=True)
+ax8.set_xticklabels(user_name, rotation='vertical')
+plt.xlabel('Teammate')
+plt.ylabel('Influences')
+for box in bp8['boxes']:
+    # change fill color
+    box.set( facecolor = 'gold' )
+## change color and linewidth of the medians
+for mean in bp8['means']:
+    mean.set(color='black', linewidth=2)
+fig8.savefig(outpath+'img8.png',bbox_inches='tight')
+plt.close(fig8)
+
+print('complete!')
 
 
 
