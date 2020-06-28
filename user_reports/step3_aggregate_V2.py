@@ -199,6 +199,7 @@ def add_date(row):
 all_meeting_data['date'] = all_meeting_data.apply(lambda row: add_date(row), axis=1)
 all_meeting_data = all_meeting_data.drop('meeting1', axis=1)
 
+
 print("Producing plots")
 
 our_user = all_meeting_data[all_meeting_data['participant']==select_participant]
@@ -207,12 +208,16 @@ our_user.set_index('date', inplace=True)
 
 outpath = path+select_participant+'/'
 
+our_user.to_csv(outpath +select_participant+'_data.csv')
+
 if not os.path.exists(outpath):
     os.mkdir(outpath)
 
 #TODO: need to make these lines curvy instead of jagged
 
-fig1 = plt.figure(figsize=(7,4))
+img_size = (7,4)
+
+fig1 = plt.figure(figsize=img_size)
 our_user['speaking_percentage'].plot(color = 'dodgerblue', linewidth=2.0, use_index=True, label='You')
 our_user['ideal_speaking_time'].plot(kind='bar', color = 'chocolate', use_index=True, label='Ideal')
 plt.xlabel('Date')
@@ -222,7 +227,7 @@ fig1.savefig(outpath+'img1.png',bbox_inches='tight')
 plt.close(fig1)
 
 
-fig2 = plt.figure(figsize=(7,4))
+fig2 = plt.figure(figsize=img_size)
 our_user['interruption'].plot(color='firebrick',linewidth=2.0, use_index=True)
 plt.xlabel('Date')
 plt.ylabel('Interruptions')
@@ -231,7 +236,7 @@ fig2.savefig(outpath+'img2.png',bbox_inches='tight')
 plt.close(fig2)
 
 
-fig3 = plt.figure(figsize=(7,4))
+fig3 = plt.figure(figsize=img_size)
 our_user['affirmation'].plot(color='forestgreen',linewidth=2.0, use_index=True)
 plt.xlabel('Date')
 plt.ylabel('Affirmations')
@@ -241,7 +246,7 @@ plt.close(fig3)
 
 
 #TODO: currently this shows the number of times they were influenced, not the other way around - needs to be fixed
-fig4 = plt.figure(figsize=(7,4))
+fig4 = plt.figure(figsize=img_size)
 our_user['influenced'].plot(color='gold',linewidth=2.0, use_index=True)
 plt.xlabel('Date')
 plt.ylabel('Influences')
@@ -282,7 +287,7 @@ for user in imp_users:
 
 
 
-fig5 = plt.figure(1, figsize=(7,4))
+fig5 = plt.figure(1, figsize=img_size)
 ax5 = fig5.add_subplot(111)
 bp5 = ax5.boxplot(speaking_time,patch_artist=True, meanline=True)
 ax5.set_xticklabels(user_name, rotation='vertical')
@@ -298,7 +303,7 @@ fig5.savefig(outpath+'img5.png',bbox_inches='tight')
 plt.close(fig5)
 
 
-fig6 = plt.figure(1, figsize=(7,4))
+fig6 = plt.figure(1, figsize=img_size)
 ax6 = fig6.add_subplot(111)
 bp6 = ax6.boxplot(interruptions,patch_artist=True, meanline=True)
 ax6.set_xticklabels(user_name, rotation='vertical')
@@ -313,7 +318,7 @@ for mean in bp6['means']:
 fig6.savefig(outpath+'img6.png',bbox_inches='tight')
 plt.close(fig6)
 
-fig7 = plt.figure(1, figsize=(7,4))
+fig7 = plt.figure(1, figsize=img_size)
 ax7 = fig7.add_subplot(111)
 bp7 = ax7.boxplot(affirmations,patch_artist=True, meanline=True)
 ax7.set_xticklabels(user_name, rotation='vertical')
@@ -328,7 +333,7 @@ for mean in bp7['means']:
 fig7.savefig(outpath+'img7.png',bbox_inches='tight')
 plt.close(fig7)
 
-fig8 = plt.figure(1, figsize=(7,4))
+fig8 = plt.figure(1, figsize=img_size)
 ax8 = fig8.add_subplot(111)
 bp8 = ax8.boxplot(influences,patch_artist=True, meanline=True)
 ax8.set_xticklabels(user_name, rotation='vertical')

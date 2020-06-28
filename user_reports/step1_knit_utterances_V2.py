@@ -30,8 +30,8 @@ all_meetings = dfinit.meeting.unique()
 number of seconds between utterances allowed:
     2 is what Riff currently uses
 '''
-max_gap_seconds = 2
-max_gap = timedelta(seconds=max_gap_seconds)
+min_gap_seconds = 2
+min_gap = timedelta(seconds=min_gap_seconds)
 
 df = dfinit
 
@@ -45,16 +45,16 @@ new_endTime = {}
 new_meeting = {}
 new_UL = {}
 
-def write_out(index_num, row, e_time):
+def write_out(index_num, row):
     new_id[index_num] = row['_id']
     new_participant[index_num] = row['participant']
     new_startTime[index_num] = row['startTime']
-    new_endTime[index_num] = e_time
+    new_endTime[index_num] = row['endTime']
     new_meeting[index_num] = row['meeting']
-    U_length = e_time-row['startTime']
+    U_length = row['endTime']-row['startTime']
     new_UL[index_num] = U_length.total_seconds()
 
-print("beginning big loop...")
+print("processing utterances...")
 
 #iterate over each meeting
 tot_meetings = all_meetings.shape[0]
@@ -65,50 +65,21 @@ for m in all_meetings:
     users = df2.participant.unique()
     for u in users:
         df3 = df2[df2['participant']==u]
-        #while the participant utterances df is not 0
-        n_rows = df3.shape[0]
-        while n_rows > 0:
-            reference_row = df3.iloc[0]
-            #if there's only one utterance left, it is it's own utterance
-            if n_rows == 1:
-                write_out(new_index, reference_row, reference_row.endTime)
-                new_index += 1
-                df3 = df3[df3['startTime']>reference_row.endTime]
-                n_rows = df3.shape[0]
+        df3 = df3.sort_values(by=['startTime'])
+        cur_utt = df3.iloc[0]
+        for index, row in df3.iterrows():
+            if row['startTime'] - cur_utt['endTime'] < min_gap:
+                cur_utt['endTime']=row['endTime']
             else:
-                #iterates through rows until it finds a gap larger than the allowed gap
-                #when it does, it writes out the data to the dictionary, filters rows alread scanned, and starts again
-                #until there are no utterances left in the dataframe
-                compare_time = reference_row['endTime']
-                row_check_num = 1
-                while row_check_num <= n_rows:
-                    check_row = df3.iloc[row_check_num]
-                    check_row_time = check_row['startTime']
-                    #print(check_row_time)
-                    #first check - if it is the last utterance left, it must write out
-                    if row_check_num == n_rows-1:
-                        compare_time = check_row['endTime']
-                        write_out(new_index, reference_row, compare_time)
-                        df3 = df3[df3['startTime']>compare_time]
-                        new_index += 1
-                        n_rows = df3.shape[0]
-                        break
-                    #second check - if the utterances are far enough apart, write out the full utterance and filter
-                    if (check_row_time - compare_time) >= max_gap:
-                        write_out(new_index, reference_row, compare_time)
-                        df3 = df3[df3['startTime']>compare_time]
-                        new_index += 1
-                        n_rows = df3.shape[0]
-                        break
-                    #third check - if the utterances aren't far enough apart, take new end time and try again
-                    if (check_row_time - compare_time) < max_gap:
-                        compare_time = check_row['endTime']
-                        row_check_num += 1
-
-
+                write_out(new_index,cur_utt)
+                new_index += 1
+                cur_utt = row
+        write_out(new_index,cur_utt)
+        new_index += 1
 
     print(count_meetings," / ",tot_meetings)
     count_meetings += 1
+
 
 print("Total Utterances: ", new_index)
 print("Writing out final data...")
@@ -139,16 +110,36 @@ print("Done!")
 
 '''
 for verification
-'''
+
+
 dftest = df_out
+# dftest = dftest.sort_values(by=['meeting','startTime'])
+# dftest2 = dftest.drop(['_id','participant','endTime','Utterance_Length_secs'], axis=1)
+# dftest2 = dftest2.groupby('meeting').first()
 
-#research-2 meeting met on
-#research1 = dftest[dftest['meeting']=='research-2']
+#research-2 meeting met on 4/22/2020 at 14:00 GMT (10 AM EST)
+#should be 450 utterances
+research1 = dftest[dftest['meeting']=='research-2']
+print('4/22/2020 Utterance count = ', research1.shape[0])
 
-#research-5 meeting met on
-#research1 = dftest[dftest['meeting']=='research-5']
+#research-5 meeting met on 4/29/2020 at 14:30 GMT (10:30 AM EST)
+#should be 303 utterances
+research1 = dftest[dftest['meeting']=='research-5']
+print('4/29/2020 Utterance count = ', research1.shape[0])
+
+#research-6 meeting met on 5/6/2020 at 14:30 GMT (10:30 AM EST)
+#should be 518 utterances
+research1 = dftest[dftest['meeting']=='research-6']
+print('5/6/2020 Utterance count = ', research1.shape[0])
 
 #research-10 meeting met on 5/18/2020 at 15:00 GMT (11 AM EST)
+#should be 290 utterances
 research1 = dftest[dftest['meeting']=='research-10']
+print('5/18/2020 Utterance count = ', research1.shape[0])
 
-print('Utterance count = ', research1.shape[0])
+#research-11 meeting met on 5/22/2020 at 19:30 GMT (3 PM EST)
+#should be 401 utterances
+research1 = dftest[dftest['meeting']=='research-11']
+print('5/22/2020 Utterance count = ', research1.shape[0])
+
+'''
