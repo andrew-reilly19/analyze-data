@@ -25,15 +25,7 @@ dfinit = dfinit.sort_values(by=['startTime'])
 
 all_meetings = dfinit.meeting.unique()
 
-# #smaller df for testing
-# selected_meetings = all_meetings[:20]
-# df = dfinit[(dfinit['meeting'].isin(selected_meetings))]
-
-#larger df for overall
 df = dfinit
-# df['interruptions'] = 0
-# df['interrupts_users'] = 'Null'
-#df.dtypes
 
 #adding on a newish index for joins later
 dflen = df.shape[0]
@@ -58,20 +50,22 @@ def interruption_compare(earlier_utt, later_utt):
     second_check = getDurationInSeconds(earlier_utt['endTime'], later_utt['endTime'])
     third_check = getDurationInSeconds(earlier_utt['startTime'], later_utt['startTime'])
     if (first_check > 1) and (second_check > 0) and (third_check > 0):
-        # print(first_check, second_check)
-        # print(later_utt['startTime'])
-        # print(earlier_utt['endTime'])
-        # print("True")
         return True
     else:
-        #print("False")
         return False
 
 def affirmation_compare(earlier_utt, later_utt):
     first_check = getDurationInSeconds(later_utt['startTime'], earlier_utt['endTime'])
     second_check = getDurationInSeconds(later_utt['endTime'], earlier_utt['endTime'])
-    #third_check = getDurationInSeconds(earlier_utt['startTime'], later_utt['startTime'])
-    if (first_check > .25) and (second_check > 0):# and (third_check > 0):
+    third_check = getDurationInSeconds(earlier_utt['startTime'], later_utt['startTime'])
+    if (first_check > .25) and (second_check > 0) and (third_check > 0):
+        return True
+    else:
+        return False
+
+def influenced_compare(earlier_utt, later_utt):
+    only_check = getDurationInSeconds(earlier_utt['endTime'],later_utt['startTime'])
+    if (only_check > 0) and (only_check < 3):
         return True
     else:
         return False
@@ -111,7 +105,13 @@ for m in meetings:
                 if affirmation_check == True:
                     affirmation_count += 1
                     affirms_users.append(row_check['participant'])
+            #check if this utterance is influenced by another
+            influenced_check = influenced_compare(earlier_utt = row_check, later_utt = row)
+            if influenced_check == True:
+                influenced_count += 1
+                influenced_by_users.append(row_check['participant'])
 
+        #add the data to the annotate_data DF
         annotatedata.at[row_myindex, 'myindex2'] = row_myindex
         annotatedata.at[row_myindex, 'interruptions'] = interruption_count
         annotatedata.at[row_myindex, 'interrupts_users'] = interrupts_users
@@ -119,9 +119,6 @@ for m in meetings:
         annotatedata.at[row_myindex, 'affirms_users'] = affirms_users
         annotatedata.at[row_myindex, 'influenced'] = influenced_count
         annotatedata.at[row_myindex, 'influenced_by_users'] = influenced_by_users
-        # utt_counter += 1
-        # if utt_counter > 6:
-        #     sys.exit()
 
     print(m_count, "/", tot_m_count)
     m_count += 1
@@ -134,11 +131,7 @@ df_out['interruptions'] = pd.to_numeric(df_out['interruptions'])
 df_out['affirmations'] = pd.to_numeric(df_out['affirmations'])
 df_out['influenced'] = pd.to_numeric(df_out['influenced'])
 
-#df_out2 = df_out.drop(['_id','participant','startTime','endTime','meeting','utterance_length','myindex'], axis=1)
-#df_out2 = df_out2[df_out2['interruptions_n']>1]
-#df_out3 = df_out[(df_out['interruptions_n']>0) & (df_out['utterance_length']<=5)]
-
-# df_out.to_csv(path + 'utterances_annotated_S2_complete.csv', index = None)
+df_out.to_csv(path + 'utterances_annotated_S2_complete.csv', index = None)
 
 print("done!")
 
@@ -177,11 +170,14 @@ dftesty = dftesty.sort_values(by=['meeting'])
 #checking the interaction counts
 
 #research1 = df_out[df_out['meeting']=='research-2']
-research1 = df_out[df_out['meeting']=='research-5']
-research1 = research1[research1['affirmations']>0]
+#research1 = df_out[df_out['meeting']=='research-5']
+research1 = df_out[df_out['meeting']=='research-10']
+total_utterances = research1.shape[0]
+print('Total Utterances:', total_utterances)
+research2 = research1[research1['affirmations']>0]
 #research1.dtypes
-research1 = research1.drop(['_id','meeting','myindex'], axis=1)
-research1 = research1.sort_values(by=['startTime'])
+research2 = research2.drop(['_id','meeting','myindex'], axis=1)
+research2 = research2.sort_values(by=['startTime'])
 
 tot_meet_secs = research1['utterance_length'].sum()
 research1['speaking_percentage'] = research1.apply(lambda row: (row['utterance_length']/tot_meet_secs)*100, axis=1)
