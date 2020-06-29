@@ -18,8 +18,8 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports_riffai/'
-df = pd.read_json (path+'utterancesRAI.json', lines=True)
+path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
+df = pd.read_json (path+'utterancesGT.json', lines=True)
 #print(df.dtypes)
 
 def cleanID(row):

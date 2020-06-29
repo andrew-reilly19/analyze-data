@@ -12,6 +12,7 @@ import datetime
 from datetime import date
 import os
 import matplotlib.pyplot as plt
+import statistics
 
 path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
 
@@ -105,11 +106,14 @@ Riff AI USERS:
     V4Kc1uN0pgP7oVhaDjcmp6swV2F3 : Mike
 '''
 
-known_users = {'MLRP_207nuzZNLc8YvoV':'Alena','MLRP_b8eXeA6wOsLaTGZ':'Brian','MLRP_4Z6SeqiBce2rVZP':'Marc','MLRP_9QQIU5xv6Vbferb':'Jarred','MLRP_2lb2J9sL14bWiLr':'Tamara', 'MLRP_2tOntZytvl6j4a1':'Gina', 'MLRP_8kT5pkyD7bYIkm1':'Andrew'}
+#known_users = {'MLRP_207nuzZNLc8YvoV':'Alena','MLRP_b8eXeA6wOsLaTGZ':'Brian','MLRP_4Z6SeqiBce2rVZP':'Marc','MLRP_9QQIU5xv6Vbferb':'Jarred','MLRP_2lb2J9sL14bWiLr':'Tamara', 'MLRP_2tOntZytvl6j4a1':'Gina', 'MLRP_8kT5pkyD7bYIkm1':'Andrew'}
+
+known_users = {'MLRP_207nuzZNLc8YvoV':'One','MLRP_b8eXeA6wOsLaTGZ':'Two','MLRP_4Z6SeqiBce2rVZP':'Three','MLRP_9QQIU5xv6Vbferb':'Four','MLRP_2lb2J9sL14bWiLr':'Five', 'MLRP_2tOntZytvl6j4a1':'Six', 'MLRP_8kT5pkyD7bYIkm1':'Seven'}
+
 
 #known_users = {'q94yeKPfA7Nf6kp8JQ69NFQ0rQw2':'Burcin', 'mGZGS6HsATg0nwArrRoXF9yYiuF3':'Andrew', 'G0DAHoX1U8hbz1IefV2Vq3TmOy72':'Beth', 'JUQuvggv76ctK1nJNOWvkkf3McT2':'Jordan', 'V4Kc1uN0pgP7oVhaDjcmp6swV2F3':'Mike'}
 
-select_participant = 'MLRP_207nuzZNLc8YvoV'
+select_participant = 'MLRP_9QQIU5xv6Vbferb'
 
 
 '''
@@ -171,7 +175,7 @@ def trim_utterance_prep(row):
 
 total_meeting_data['trimflag'] = total_meeting_data.apply(lambda row: trim_utterance_prep(row), axis=1)
 trimmed_meeting_data = total_meeting_data[total_meeting_data['trimflag']==1]
-trimmed_meeting_data = trimmed_meeting_data.drop(['_id','trimflag','interrupts_user','affirms_user','influenced_by_user', 'startTime','endTime'], axis=1)
+trimmed_meeting_data = trimmed_meeting_data.drop(['_id','trimflag','interrupts_users','affirms_users','influenced_by_users', 'startTime','endTime'], axis=1)
 
 print("Utterances Trimmed")
 #Trimmed and aggregate meeting data here will be used for the rest of the plotting
@@ -202,15 +206,81 @@ all_meeting_data = all_meeting_data.drop('meeting1', axis=1)
 print("Producing plots")
 
 our_user = all_meeting_data[all_meeting_data['participant']==select_participant]
-our_user.set_index('date', inplace=True)
 #our_user = our_user.sort_values(by=['date'])
+our_user.set_index('date', inplace=True)
 
 outpath = path+select_participant+'/'
 
-our_user.to_csv(outpath +select_participant+'_data.csv')
-
 if not os.path.exists(outpath):
     os.mkdir(outpath)
+
+#creating and writing out companion data:
+def find_trendline(arr):
+    x = np.arange(1,len(arr)+1)
+    y = np.array(arr)
+    z = np.polyfit(x,y,1)
+    return z
+
+our_user_outdata = pd.DataFrame(columns=['type','slope','y-intercept','first_predict', 'final_predict', 'improvement_percentage'])
+
+print('creating companion data')
+#speaking time data
+dta = our_user['speaking_percentage'].to_numpy()
+dta_line = find_trendline(dta)
+our_user_outdata.at[0,'type'] = 'speaking_time'
+our_user_outdata.at[0,'slope'] = dta_line[0]
+our_user_outdata.at[0,'y-intercept'] = dta_line[1]
+first_prediction = dta_line[1] + dta_line[0]
+final_prediction = dta_line[1] + (dta_line[0]*our_user.shape[0])
+improvement = (final_prediction/first_prediction)*100-100
+our_user_outdata.at[0,'first_predict'] = first_prediction
+our_user_outdata.at[0,'final_predict'] = final_prediction
+our_user_outdata.at[0,'improvement_percentage'] = improvement
+
+
+#interruptions data
+dta = our_user['interruptions'].to_numpy()
+dta_line = find_trendline(dta)
+our_user_outdata.at[1,'type'] = 'interruptions'
+our_user_outdata.at[1,'slope'] = dta_line[0]
+our_user_outdata.at[1,'y-intercept'] = dta_line[1]
+first_prediction = dta_line[1] + dta_line[0]
+final_prediction = dta_line[1] + (dta_line[0]*our_user.shape[0])
+improvement = (final_prediction/first_prediction)*100-100
+our_user_outdata.at[1,'first_predict'] = first_prediction
+our_user_outdata.at[1,'final_predict'] = final_prediction
+our_user_outdata.at[1,'improvement_percentage'] = improvement
+
+
+#affirmations data
+dta = our_user['affirmations'].to_numpy()
+dta_line = find_trendline(dta)
+our_user_outdata.at[2,'type'] = 'affirmations'
+our_user_outdata.at[2,'slope'] = dta_line[0]
+our_user_outdata.at[2,'y-intercept'] = dta_line[1]
+first_prediction = dta_line[1] + dta_line[0]
+final_prediction = dta_line[1] + (dta_line[0]*our_user.shape[0])
+improvement = (final_prediction/first_prediction)*100-100
+our_user_outdata.at[2,'first_predict'] = first_prediction
+our_user_outdata.at[2,'final_predict'] = final_prediction
+our_user_outdata.at[2,'improvement_percentage'] = improvement
+
+
+#influences data
+dta = our_user['influenced'].to_numpy()
+dta_line = find_trendline(dta)
+our_user_outdata.at[3,'type'] = 'influences'
+our_user_outdata.at[3,'slope'] = dta_line[0]
+our_user_outdata.at[3,'y-intercept'] = dta_line[1]
+first_prediction = dta_line[1] + dta_line[0]
+final_prediction = dta_line[1] + (dta_line[0]*our_user.shape[0])
+improvement = (final_prediction/first_prediction)*100-100
+our_user_outdata.at[3,'first_predict'] = first_prediction
+our_user_outdata.at[3,'final_predict'] = final_prediction
+our_user_outdata.at[3,'improvement_percentage'] = improvement
+
+
+our_user_outdata.to_csv(outpath +select_participant+'_data.csv')
 
 #TODO: need to make these lines curvy instead of jagged
 
@@ -219,43 +289,48 @@ img_size = (7,4)
 fig1 = plt.figure(figsize=img_size)
 our_user['speaking_percentage'].plot(color = 'dodgerblue', linewidth=2.0, use_index=True, label='You')
 our_user['ideal_speaking_time'].plot(kind='bar', color = 'chocolate', use_index=True, label='Ideal')
-plt.xlabel('Date')
+plt.xlabel('Meeting Date')
 plt.ylabel('% Speaking Time')
+plt.title('Ideal and Actual Percentage of Time Spoken per Meeting')
 plt.legend(loc="best")
-fig1.savefig(outpath+'img1.png',bbox_inches='tight')
+fig1.savefig(outpath+'speaking_percentage_user.png',bbox_inches='tight')
 plt.close(fig1)
 
 
 fig2 = plt.figure(figsize=img_size)
-our_user['interruption'].plot(color='firebrick',linewidth=2.0, use_index=True)
-plt.xlabel('Date')
+our_user['interruptions'].plot(color='firebrick',linewidth=2.0, use_index=True)
+plt.xlabel('Meeting Date')
 plt.ylabel('Interruptions')
+plt.title('Interruptions over Time')
 plt.xticks(rotation='vertical')
-fig2.savefig(outpath+'img2.png',bbox_inches='tight')
+fig2.savefig(outpath+'interruptions_user.png',bbox_inches='tight')
 plt.close(fig2)
 
 
 fig3 = plt.figure(figsize=img_size)
-our_user['affirmation'].plot(color='forestgreen',linewidth=2.0, use_index=True)
-plt.xlabel('Date')
+our_user['affirmations'].plot(color='forestgreen',linewidth=2.0, use_index=True)
+plt.xlabel('Meeting Date')
 plt.ylabel('Affirmations')
+plt.title('Affirmations over Time')
 plt.xticks(rotation='vertical')
-fig3.savefig(outpath+'img3.png',bbox_inches='tight')
+fig3.savefig(outpath+'affirmations_user.png',bbox_inches='tight')
 plt.close(fig3)
 
 
 #TODO: currently this shows the number of times they were influenced, not the other way around - needs to be fixed
 fig4 = plt.figure(figsize=img_size)
 our_user['influenced'].plot(color='gold',linewidth=2.0, use_index=True)
-plt.xlabel('Date')
+plt.xlabel('Meeting Date')
 plt.ylabel('Influences')
+plt.title('Influences over Time')
 plt.xticks(rotation='vertical')
-fig4.savefig(outpath+'img4.png',bbox_inches='tight')
+fig4.savefig(outpath+'influences_user.png',bbox_inches='tight')
 plt.close(fig4)
 
 print('first 4 plots complete')
 
 #Now onto the boxplots
+#pulling out all unique users
 a_users = all_meeting_data.participant.unique()
 imp_users = [select_participant]
 for user in a_users:
@@ -269,82 +344,153 @@ speaking_time = []
 interruptions = []
 affirmations = []
 influences = []
-user_name = ['You!']
+orderDF = pd.DataFrame(columns=['myindex','name','speaking_time_median','interruptions_median','affirmations_median','influences_median'])
 
-for user in imp_users:
-    udf = all_meeting_data[all_meeting_data['participant']==user]
+u_counter = 0
+for u in imp_users:
+    #finding the data for each user and then creating a list of it, writing it to list of lists
+    #the first user is always the target user, and so their median gets boosted so they always show up
+    #on the graph first (this dosn't mess with the actual data, just the order in which they're presented)
+    udf = all_meeting_data[all_meeting_data['participant']==u]
     sp_list = udf['speaking_percentage'].to_list()
-    int_list = udf['interruption'].to_list()
-    aff_list = udf['affirmation'].to_list()
+    sp_med = statistics.median(sp_list)
+    if u_counter == 0:
+        sp_med = sp_med*100
+    int_list = udf['interruptions'].to_list()
+    int_med = statistics.median(int_list)
+    if u_counter == 0:
+        int_med = int_med*100
+    aff_list = udf['affirmations'].to_list()
+    aff_med = statistics.median(aff_list)
+    if u_counter == 0:
+        aff_med = aff_med*100
     inf_list = udf['influenced'].to_list()
+    inf_med = statistics.median(inf_list)
+    if u_counter == 0:
+        inf_med = inf_med*100
+    #now writing the data to appropriate storage
     speaking_time.append(sp_list)
     interruptions.append(int_list)
     affirmations.append(aff_list)
     influences.append(inf_list)
-    if user != select_participant:
-        user_name.append(known_users.get(user))
+    orderDF.at[u_counter, 'myindex'] = u_counter
+    if u_counter == 0:
+        orderDF.at[u_counter, 'name'] = 'YOU!'
+    else:
+        orderDF.at[u_counter, 'name'] = known_users.get(u)
+    orderDF.at[u_counter, 'speaking_time_median'] = sp_med
+    orderDF.at[u_counter, 'interruptions_median'] = int_med
+    orderDF.at[u_counter, 'affirmations_median'] = aff_med
+    orderDF.at[u_counter, 'influences_median'] = inf_med
+    u_counter += 1
+
+
+#Reordering data based on the relevant medians
+orderDF2 = orderDF.sort_values(by='speaking_time_median', ascending=False)
+sp_order = orderDF2['myindex'].to_list()
+sp_names = orderDF2['name'].to_list()
+speaking_time2 = []
+for item in sp_order:
+    nextlist = speaking_time[item]
+    speaking_time2.append(nextlist)
 
 
 
 fig5 = plt.figure(1, figsize=img_size)
 ax5 = fig5.add_subplot(111)
-bp5 = ax5.boxplot(speaking_time,patch_artist=True, meanline=True)
-ax5.set_xticklabels(user_name, rotation='vertical')
+bp5 = ax5.boxplot(speaking_time2,patch_artist=True, meanline=True)
+ax5.set_xticklabels(sp_names, rotation='vertical')
 plt.xlabel('Teammate')
 plt.ylabel('Speaking Time %')
+plt.title('Distribution of Speaking Time by Teammate')
 for box in bp5['boxes']:
     # change fill color
     box.set( facecolor = 'royalblue' )
 ## change color and linewidth of the medians
 for mean in bp5['means']:
     mean.set(color='black', linewidth=2)
-fig5.savefig(outpath+'img5.png',bbox_inches='tight')
+fig5.savefig(outpath+'speaking_time_group.png',bbox_inches='tight')
 plt.close(fig5)
+
+
+#Reordering data based on the relevant medians
+orderDF2 = orderDF.sort_values(by='interruptions_median', ascending=False)
+int_order = orderDF2['myindex'].to_list()
+int_names = orderDF2['name'].to_list()
+interruptions2 = []
+for item in int_order:
+    nextlist = interruptions[item]
+    interruptions2.append(nextlist)
 
 
 fig6 = plt.figure(1, figsize=img_size)
 ax6 = fig6.add_subplot(111)
-bp6 = ax6.boxplot(interruptions,patch_artist=True, meanline=True)
-ax6.set_xticklabels(user_name, rotation='vertical')
+bp6 = ax6.boxplot(interruptions2,patch_artist=True, meanline=True)
+ax6.set_xticklabels(int_names, rotation='vertical')
 plt.xlabel('Teammate')
 plt.ylabel('Interruptions')
+plt.title('Distribution of Interruptions by Teammate')
 for box in bp6['boxes']:
     # change fill color
     box.set( facecolor = 'firebrick' )
 ## change color and linewidth of the medians
 for mean in bp6['means']:
     mean.set(color='black', linewidth=2)
-fig6.savefig(outpath+'img6.png',bbox_inches='tight')
+fig6.savefig(outpath+'interruptions_group.png',bbox_inches='tight')
 plt.close(fig6)
+
+
+#Reordering data based on the relevant medians
+orderDF2 = orderDF.sort_values(by='affirmations_median', ascending=False)
+aff_order = orderDF2['myindex'].to_list()
+aff_names = orderDF2['name'].to_list()
+affirmations2 = []
+for item in aff_order:
+    nextlist = affirmations[item]
+    affirmations2.append(nextlist)
+
 
 fig7 = plt.figure(1, figsize=img_size)
 ax7 = fig7.add_subplot(111)
-bp7 = ax7.boxplot(affirmations,patch_artist=True, meanline=True)
-ax7.set_xticklabels(user_name, rotation='vertical')
+bp7 = ax7.boxplot(affirmations2,patch_artist=True, meanline=True)
+ax7.set_xticklabels(aff_names, rotation='vertical')
 plt.xlabel('Teammate')
 plt.ylabel('Affirmations')
+plt.title('Distribution of Affirmations by Teammate')
 for box in bp7['boxes']:
     # change fill color
     box.set( facecolor = 'forestgreen' )
 ## change color and linewidth of the medians
 for mean in bp7['means']:
     mean.set(color='black', linewidth=2)
-fig7.savefig(outpath+'img7.png',bbox_inches='tight')
+fig7.savefig(outpath+'affirmations_group.png',bbox_inches='tight')
 plt.close(fig7)
+
+
+#Reordering data based on the relevant medians
+orderDF2 = orderDF.sort_values(by='influences_median', ascending=False)
+inf_order = orderDF2['myindex'].to_list()
+inf_names = orderDF2['name'].to_list()
+influences2 = []
+for item in inf_order:
+    nextlist = influences[item]
+    influences2.append(nextlist)
+
 
 fig8 = plt.figure(1, figsize=img_size)
 ax8 = fig8.add_subplot(111)
-bp8 = ax8.boxplot(influences,patch_artist=True, meanline=True)
-ax8.set_xticklabels(user_name, rotation='vertical')
+bp8 = ax8.boxplot(influences2,patch_artist=True, meanline=True)
+ax8.set_xticklabels(inf_names, rotation='vertical')
 plt.xlabel('Teammate')
 plt.ylabel('Influences')
+plt.title('Distribution of Influences by Teammate')
 for box in bp8['boxes']:
     # change fill color
     box.set( facecolor = 'gold' )
 ## change color and linewidth of the medians
 for mean in bp8['means']:
     mean.set(color='black', linewidth=2)
-fig8.savefig(outpath+'img8.png',bbox_inches='tight')
+fig8.savefig(outpath+'influences_group.png',bbox_inches='tight')
 plt.close(fig8)
 
 print('complete!')

@@ -4,6 +4,8 @@
 Created on Fri May 22 09:45:30 2020
 
 @author: andrew
+
+Runtime: ~ 2.5 mins on GT data
 """
 
 import pandas as pd
@@ -11,7 +13,7 @@ import numpy as np
 import sys
 from datetime import datetime, timedelta
 
-path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports_riffai/'
+path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
 dfinit = pd.read_csv (path+'knit_utterances_S1_complete.csv')
 #dfinit = pd.read_csv (path+'knit_utterances_S1_complete_1sec.csv')
 
@@ -162,11 +164,12 @@ def selfcheck(row):
 dftesty['self_flag'] = dftesty.apply(lambda row: (selfcheck(row)), axis=1)
 dftesty = dftesty[dftesty['self_flag']==1]
 dftesty = dftesty.sort_values(by=['meeting'])
+print(dftesty.shape[0], '  self-interactions found!')
 
 #mt = dftesty.meeting.unique()
 
 
-
+'''
 #checking the interaction counts
 
 #research1 = df_out[df_out['meeting']=='research-2']
@@ -184,7 +187,7 @@ research1['speaking_percentage'] = research1.apply(lambda row: (row['utterance_l
 research1 = research1.drop(['_id','startTime','endTime','meeting', 'interrupts_users','affirms_users','influenced_by_users','myindex'], axis=1)
 research1 = research1.groupby(['participant']).sum()
 research1 = research1.sort_values(by=['utterance_length'])
-
+'''
 
 
 '''

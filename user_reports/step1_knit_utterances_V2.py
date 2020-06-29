@@ -7,7 +7,7 @@ Created on Fri May 22 09:45:30 2020
 
 This is meant to knit the utterances together to get better metrics down the line
 
-Runtime: ~3 mins on GT dataset
+Runtime: ~15 secs on GT dataset
 
 """
 
@@ -15,7 +15,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports_riffai/'
+path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
 dfinit = pd.read_csv (path+'all_utterances_S0_complete.csv')
 
 
