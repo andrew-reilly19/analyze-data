@@ -28,6 +28,7 @@ all_meetings = dfinit.meeting.unique()
 
 #larger df for overall
 df = dfinit
+#df.dtypes
 
 #adding on a newish index for joins later
 dflen = df.shape[0]
@@ -41,71 +42,72 @@ meetings = df.meeting.unique()
 
 print("loaded data")
 
-def annotate_interruption(target_start, target_end, target_user, target_len, indiv_meetingDF):
+def annotate_interruption(target_row, check_utts_df):
     interruptFlag = 0
     interrupted_user = ""
     #3 conditions - A speaks while B is speaking, there is at least a second overlap, A speaks for 5 sec, and B stops before A
     # interruption is at least 5 seconds
-    if target_len > 5:
+    if target_row['Utterance_Length_secs'] > 5:
+        #print('length condition met',target_row['Utterance_Length_secs'])
         #can't interrupt yourself
-        interDF = indiv_meetingDF[(indiv_meetingDF['participant'] != target_user)]
+        interDF = check_utts_df[(check_utts_df['participant'] != target_row['participant'])]
         if interDF.shape[0] > 0:
             #someone else needs to be talking when you interrupt
-            interDF = interDF[(interDF['startTime']<target_start)]
+            interDF = interDF[(interDF['startTime']<target_row['startTime'])]
             if interDF.shape[0] > 0:
-                interDF = interDF[(interDF['endTime']<target_end)]
+                interDF = interDF[(interDF['endTime']<target_row['endTime'])]
                 if interDF.shape[0] > 0:
                     #needs at least a 1 second overlap
-                    interDF = interDF[(interDF['endTime']-timedelta(seconds=1)>target_start)]
+                    interDF = interDF[(interDF['endTime']-timedelta(seconds=1)>target_row['startTime'])]
         #interDF = indiv_meetingDF[(indiv_meetingDF['startTime']<target_start) & (indiv_meetingDF['endTime']-timedelta(seconds=1)>target_start) & (indiv_meetingDF['endTime']<target_end) & ]
                     if interDF.shape[0] > 0:
                         interruptFlag = interDF.shape[0]
                         interrupted_user = interDF.iloc[0]['participant']
-    return([interruptFlag, interrupted_user])
+    int_output = [interruptFlag, interrupted_user]
+    return(int_output)
 
-def annotate_affirmations(target_start, target_end, target_user, target_len, indiv_meetingDF):
+def annotate_affirmations(target_row, indiv_meetingDF):
     affirmflag = 0
     affirms_user = ""
-    if (target_len < 2) & (target_len > .25):
-        #print('length condition met')
+    if (target_row['Utterance_Length_secs'] < 2) & (target_row['Utterance_Length_secs'] > .25):
+        #print('length condition met', target_row['Utterance_Length_secs'])
         #3 conditions - A speaks while B is speaking, there is at least a quarter second overlap, and A stops before B
-        interDF = indiv_meetingDF[(indiv_meetingDF['startTime']<target_start) & (indiv_meetingDF['endTime']>target_end) & (indiv_meetingDF['participant']!= target_user)]
+        interDF = indiv_meetingDF[(indiv_meetingDF['startTime']<target_row['startTime']) & (indiv_meetingDF['endTime']>target_row['endTime']) & (indiv_meetingDF['participant']!= target_row['participant'])]
         if interDF.shape[0] > 0:
             affirmflag = interDF.shape[0]
             affirms_user = interDF.iloc[0]['participant']
-    return([affirmflag, affirms_user])
+    aff_output=[affirmflag, affirms_user]
+    return(aff_output)
 
-def annotate_influence(target_start, target_user, target_len, indiv_meetingDF):
+def annotate_influence(target_row, indiv_meetingDF):
     influencedflag = 0
     influenced_by_user = ""
     #simple calculation - can't be an interruption (other users's end time needs to be before the target users's start time) and within 3 sec
-    interDF = indiv_meetingDF[(indiv_meetingDF['endTime']<target_start) & (indiv_meetingDF['endTime']+timedelta(seconds=3)>target_start) & (indiv_meetingDF['participant']!= target_user)]
+    interDF = indiv_meetingDF[(indiv_meetingDF['endTime']<target_row['startTime']) & (indiv_meetingDF['endTime']+timedelta(seconds=3)>target_row['startTime']) & (indiv_meetingDF['participant']!= target_row['participant'])]
     if interDF.shape[0] > 0:
         influencedflag = interDF.shape[0]
         influenced_by_user = interDF.iloc[0]['participant']
-    return([influencedflag, influenced_by_user])
+    inf_output = [influencedflag, influenced_by_user]
+    return(inf_output)
 
 
-def overall_annotation_function(row, max_utterance):
+def overall_annotation_function(row, max_utterance, oaf_df):
     #getting intermediate dataframe - all possible intersecting utterances within max utterance length + 3 sec (for influences)
-    start_bracket = row['startTime']-timedelta(seconds=(max_utterance+3.001))
-    end_bracket = row['startTime']
+    start_bracket = row['startTime']-timedelta(seconds=(max_utterance+3.01))
+    end_bracket = row['startTime']+timedelta(seconds=(3.01))
     my_index = row['myindex']
-    im_df = df[(df['startTime']>start_bracket) & (df['endTime']>end_bracket) & (df['myindex']!=my_index)]
-    row_start = row['startTime']
-    row_end = row['endTime']
-    row_user = row['participant']
-    row_len = row['Utterance_Length_secs']
+    im_df = oaf_df[(oaf_df['startTime']>start_bracket) & (oaf_df['endTime']>end_bracket) & (oaf_df['participant']!=row['participant'])]
     #checking for interruptions
-    interr_data = annotate_interruption(target_start=row_start, target_end=row_end, target_user=row_user, target_len=row_len, indiv_meetingDF=im_df)
+    #im_df = oaf_df[oaf_df['participant']!=row['participant']]
+    interr_data = annotate_interruption(target_row=row, check_utts_df=im_df)
     interruption_flag[my_index] = interr_data[0]
     interrupts_user[my_index] = interr_data[1]
     #checking for affirmations
-    affirm_data = annotate_affirmations(target_start=row_start, target_end=row_end, target_user=row_user, target_len = row_len, indiv_meetingDF=im_df)
+    affirm_data = annotate_affirmations(target_row=row, indiv_meetingDF=im_df)
     affirm_flag[my_index] = affirm_data[0]
     affirms_user[my_index] = affirm_data[1]
     #checking for influenced_by
-    influence_data = annotate_influence(target_start=row_start, target_user=row_user, target_len=row_len, indiv_meetingDF=im_df)
+    influence_data = annotate_influence(target_row=row, indiv_meetingDF=im_df)
     influenced_by_flag[my_index] = influence_data[0]
     influenced_by_user[my_index] = influence_data[1]
 
@@ -124,7 +126,8 @@ totalcount = len(meetings)
 for m in meetings:
     df2 = df[df['meeting']==m]
     longest_utterance = df2.Utterance_Length_secs.max()
-    df2.apply(lambda row: overall_annotation_function(row, longest_utterance), axis=1)
+    for i, r in df2.iterrows():
+        overall_annotation_function(row=r, max_utterance=longest_utterance, oaf_df=df2)
     count = count+1
     print(count," / ",totalcount)
 
@@ -156,7 +159,8 @@ Testing
 
 
 #checking if there are any self-interactions
-dftesty = df.drop(['_id'], axis=1)#,'startTime','endTime','utterance_length','interruption','affirmation','influenced'], axis=1)
+dftesty = df.drop(['_id','startTime','endTime','interruption','affirmation','influenced'], axis=1)
+#dftesty = df
 
 def selfcheck(row):
     flag = 0
@@ -195,6 +199,6 @@ research-11 meeting met on 5/22/2020 at 19:30 GMT (3 PM EST)
 '''
 
 
-derp = df[df['meeting']=='blueleaf-4']
+derp = dfinit[dfinit['meeting']=='blueleaf-4']
 
 
