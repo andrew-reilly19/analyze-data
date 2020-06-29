@@ -34,7 +34,6 @@ df = dfinit.sort_values(by=['startTime'])
 #     return flag
 
 # dftesty['self_flag'] = dftesty.apply(lambda row: (selfcheck(row)), axis=1)
-
 # dftesty = dftesty[dftesty['self_flag']==1]
 
 dfraw = pd.read_csv (path+'all_utterances_S0_complete_w_0s.csv')
