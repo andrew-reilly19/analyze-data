@@ -92,8 +92,29 @@ Riff AI USERS:
 '''
 
 #GT users
-known_users = {'MLRP_207nuzZNLc8YvoV':'Alena','MLRP_b8eXeA6wOsLaTGZ':'Brian','MLRP_4Z6SeqiBce2rVZP':'Marc','MLRP_9QQIU5xv6Vbferb':'Jarred','MLRP_2lb2J9sL14bWiLr':'Tamara', 'MLRP_2tOntZytvl6j4a1':'Gina', 'MLRP_8kT5pkyD7bYIkm1':'Andrew'}
+#known_users = {'MLRP_207nuzZNLc8YvoV':'Alena','MLRP_b8eXeA6wOsLaTGZ':'Brian','MLRP_4Z6SeqiBce2rVZP':'Marc','MLRP_9QQIU5xv6Vbferb':'Jarred','MLRP_2lb2J9sL14bWiLr':'Tamara', 'MLRP_2tOntZytvl6j4a1':'Gina', 'MLRP_8kT5pkyD7bYIkm1':'Andrew'}
 #known_users = {'MLRP_207nuzZNLc8YvoV':'One','MLRP_b8eXeA6wOsLaTGZ':'Two','MLRP_4Z6SeqiBce2rVZP':'Three','MLRP_9QQIU5xv6Vbferb':'Four','MLRP_2lb2J9sL14bWiLr':'Five', 'MLRP_2tOntZytvl6j4a1':'Six', 'MLRP_8kT5pkyD7bYIkm1':'Seven'}
+
+GT_users = pd.read_csv (path+'intake_data/Grant_Thornton_ContactList_2020-06-12.csv')
+GT_users2 = GT_users[['RecipientID','Email','FullName','DisplayName']]
+# GT_users2 = GT_users2.head(50)
+
+known_users = {}
+
+# checkdf = dfinit[dfinit['participant']=='MLRP_207nuzZNLc8YvoV']
+# len(checkdf.meeting.unique())
+
+for index, row in GT_users2.iterrows():
+    p_id = row['RecipientID']
+    checkdf = dfinit[dfinit['participant']==p_id]
+    len(checkdf.meeting.unique())
+    if len(checkdf.meeting.unique())>1:
+        known_users[p_id] = row['DisplayName']
+
+#206 total users in the csv we have
+#53 users with >2
+#93 users with >1
+#151 users with at least 1 meeting
 
 #RiffAI users
 #known_users = {'q94yeKPfA7Nf6kp8JQ69NFQ0rQw2':'Burcin', 'mGZGS6HsATg0nwArrRoXF9yYiuF3':'Andrew', 'G0DAHoX1U8hbz1IefV2Vq3TmOy72':'Beth', 'JUQuvggv76ctK1nJNOWvkkf3McT2':'Jordan', 'V4Kc1uN0pgP7oVhaDjcmp6swV2F3':'Mike'}
@@ -354,19 +375,34 @@ def create_plots(select_participant):
     img_size = (7,4)
 
     fig1 = plt.figure(figsize=img_size)
-    our_user['speaking_percentage'].plot(color = 'dodgerblue', linewidth=2.0, use_index=True, label='You')
+    our_user['speaking_percentage'].plot(color = 'royalblue', linewidth=2.0, use_index=True, label='You')
     our_user['ideal_speaking_time'].plot(kind='bar', color = 'lightslategrey', use_index=True, label='Balanced')
     plt.xlabel('Meeting Date')
     plt.ylabel('% Speaking Time')
     plt.title('Balanced and Actual Percentage of Time Spoken per Meeting')
+    plt.xticks(rotation='vertical')
     plt.legend(loc="best")
     plt.ylim(ymin=0)
     fig1.savefig(outpath+'speaking_percentage_user.png',bbox_inches='tight')
     plt.close(fig1)
 
 
+    #this plot shows the difference from the balanced
+    our_user['ST_diff'] = our_user.apply(lambda row: (row['speaking_percentage']-row['ideal_speaking_time']), axis=1)
+
+    fig1_2 = plt.figure(figsize=img_size)
+    our_user['ST_diff'].plot(color = 'royalblue', linewidth=2.0, use_index=True)
+    plt.axhline(y=0, color='lightslategrey', linestyle='--')
+    plt.xlabel('Meeting Date')
+    plt.ylabel('Difference in % Speaking Time')
+    plt.title('Difference Between Balanced Speaking Percentage and Actual Percentage')
+    plt.xticks(rotation='vertical')
+    #plt.yticks.set_major_formatter(FuncFormatter(lambda y, _: '{:.0%}'.format(y)))
+    fig1_2.savefig(outpath+'speaking_time_diff.png',bbox_inches='tight')
+    plt.close(fig1_2)
+
     fig2 = plt.figure(figsize=img_size)
-    our_user['interruptions'].plot(color='firebrick',linewidth=2.0, use_index=True)
+    our_user['interruptions'].plot(color='crimson',linewidth=2.0, use_index=True)
     plt.xlabel('Meeting Date')
     plt.ylabel('Interruptions')
     plt.title('Interruptions over Time')
@@ -377,7 +413,7 @@ def create_plots(select_participant):
 
 
     fig3 = plt.figure(figsize=img_size)
-    our_user['affirmations'].plot(color='forestgreen',linewidth=2.0, use_index=True)
+    our_user['affirmations'].plot(color='mediumseagreen',linewidth=2.0, use_index=True)
     plt.xlabel('Meeting Date')
     plt.ylabel('Affirmations')
     plt.title('Affirmations over Time')
@@ -480,8 +516,8 @@ def create_plots(select_participant):
         # change fill color
         box.set( facecolor = 'royalblue' )
     ## change color and linewidth of the medians
-    for mean in bp5['means']:
-        mean.set(color='black', linewidth=2)
+    for median in bp5['medians']:
+        median.set(color='black', linewidth=2)
     fig5.savefig(outpath+'speaking_time_group.png',bbox_inches='tight')
     plt.close(fig5)
 
@@ -506,10 +542,10 @@ def create_plots(select_participant):
     plt.title('Distribution of Interruptions by Teammate')
     for box in bp6['boxes']:
         # change fill color
-        box.set( facecolor = 'firebrick' )
+        box.set( facecolor = 'crimson' )
     ## change color and linewidth of the medians
-    for mean in bp6['means']:
-        mean.set(color='black', linewidth=2)
+    for median in bp6['medians']:
+        median.set(color='black', linewidth=2)
     fig6.savefig(outpath+'interruptions_group.png',bbox_inches='tight')
     plt.close(fig6)
 
@@ -534,10 +570,10 @@ def create_plots(select_participant):
     plt.title('Distribution of Affirmations by Teammate')
     for box in bp7['boxes']:
         # change fill color
-        box.set( facecolor = 'forestgreen' )
+        box.set( facecolor = 'mediumseagreen' )
     ## change color and linewidth of the medians
-    for mean in bp7['means']:
-        mean.set(color='black', linewidth=2)
+    for median in bp7['medians']:
+        median.set(color='black', linewidth=2)
     fig7.savefig(outpath+'affirmations_group.png',bbox_inches='tight')
     plt.close(fig7)
 
@@ -564,8 +600,8 @@ def create_plots(select_participant):
         # change fill color
         box.set( facecolor = 'mediumorchid' )
     ## change color and linewidth of the medians
-    for mean in bp8['means']:
-        mean.set(color='black', linewidth=2)
+    for median in bp8['medians']:
+        median.set(color='black', linewidth=2)
     fig8.savefig(outpath+'influences_group.png',bbox_inches='tight')
     plt.close(fig8)
 
