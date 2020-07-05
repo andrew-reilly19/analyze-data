@@ -172,18 +172,21 @@ def create_list(string):
     #print(strg)
     return(strg)
 
-
+GTuser_meetings = {}
 
 #function to wrap everything together
 
 def create_plots(select_participant):
     #select_participant = 'mGZGS6HsATg0nwArrRoXF9yYiuF3'
 
+    #1 meeting1:
+    #select_participant = 'MLRP_d7jv9UD8Jm7TSMR'
+
     #2 meetings:
-    #select_participant = 'MLRP_9ZG35uuj61EMpU1'
+    #select_participant = 'MLRP_6SeenYQinYAdl1X'
 
     #4 meetings:
-    #select_participant = 'MLRP_damgncBC702TkLb'
+    #select_participant = 'MLRP_0He7uDRTMmoI1cp'
     '''
     This section figures out the first plots, on user speaking time.  This should be converted from a single-user approach to a
     multi-user approach eventually
@@ -292,14 +295,6 @@ def create_plots(select_participant):
     trimmed_meeting_data = total_meeting_data
     trimmed_meeting_data = trimmed_meeting_data.drop(['_id','interrupts_users','affirms_users','influenced_by_users', 'startTime','endTime'], axis=1)
 
-    '''
-    nm = total_meeting_data[total_meeting_data['participant']==select_participant].meeting.unique()
-    print(nm)
-
-    nm2 = dfinit[dfinit['participant']==select_participant].meeting.unique()
-    print(nm2)
-    '''
-
     #print("Utterances Trimmed")
     #Trimmed and aggregate meeting data here will be used for the rest of the plotting
 
@@ -330,6 +325,7 @@ def create_plots(select_participant):
 
     our_user = our_user.sort_values(by=['date'])
     our_user['date'] = our_user.apply(lambda row: convert_date(row), axis=1)
+    xlabs = our_user['date'].to_list()
     our_user = our_user.set_index('date', append=True).reset_index(level=0)
 
 
@@ -400,13 +396,15 @@ def create_plots(select_participant):
 
     img_size = (7,4)
 
+    nticks = list(range(len(p_meetings)))
+
     fig1 = plt.figure(figsize=img_size)
-    our_user['speaking_percentage'].plot(color = 'royalblue', linewidth=2.0, use_index=True, label='You')
+    our_user['speaking_percentage'].plot(color = 'royalblue', linewidth=2.0, marker='.', use_index=True, label='You')
     our_user['ideal_speaking_time'].plot(kind='bar', color = 'lightslategrey', use_index=True, label='Balanced')
     plt.xlabel('Meeting Date')
     plt.ylabel('% Speaking Time')
     plt.title('Balanced and Actual Percentage of Time Spoken per Meeting')
-    plt.xticks(rotation='vertical')
+    plt.xticks(rotation=45, ticks=nticks, labels=xlabs)
     plt.legend(loc="best")
     plt.ylim(ymin=0)
     fig1.savefig(outpath+'speaking_percentage_user.png',bbox_inches='tight')
@@ -417,44 +415,44 @@ def create_plots(select_participant):
     our_user['ST_diff'] = our_user.apply(lambda row: (row['speaking_percentage']-row['ideal_speaking_time']), axis=1)
 
     fig1_2 = plt.figure(figsize=img_size)
-    our_user['ST_diff'].plot(color = 'royalblue', linewidth=2.0, use_index=True)
+    our_user['ST_diff'].plot(color = 'royalblue', linewidth=2.0, marker='.', use_index=True)
     plt.axhline(y=0, color='lightslategrey', linestyle='--')
     plt.xlabel('Meeting Date')
     plt.ylabel('Difference in % Speaking Time')
     plt.title('Difference Between Balanced Speaking Percentage and Actual Percentage')
-    plt.xticks(rotation='vertical')
+    plt.xticks(rotation=45, ticks=nticks, labels=xlabs)
     #plt.yticks.set_major_formatter(FuncFormatter(lambda y, _: '{:.0%}'.format(y)))
     fig1_2.savefig(outpath+'speaking_time_diff.png',bbox_inches='tight')
     plt.close(fig1_2)
 
     fig2 = plt.figure(figsize=img_size)
-    our_user['interruptions'].plot(color='crimson',linewidth=2.0, use_index=True)
+    our_user['interruptions'].plot(color='crimson',linewidth=2.0, marker='.', use_index=True)
     plt.xlabel('Meeting Date')
     plt.ylabel('Interruptions')
     plt.title('Interruptions over Time')
-    plt.xticks(rotation='vertical')
+    plt.xticks(rotation=45, ticks=nticks, labels=xlabs)
     plt.ylim(ymin=0)
     fig2.savefig(outpath+'interruptions_user.png',bbox_inches='tight')
     plt.close(fig2)
 
 
     fig3 = plt.figure(figsize=img_size)
-    our_user['affirmations'].plot(color='mediumseagreen',linewidth=2.0, use_index=True)
+    our_user['affirmations'].plot(color='mediumseagreen',linewidth=2.0, marker='.', use_index=True)
     plt.xlabel('Meeting Date')
     plt.ylabel('Affirmations')
     plt.title('Affirmations over Time')
-    plt.xticks(rotation='vertical')
+    plt.xticks(rotation=45, ticks=nticks, labels=xlabs)
     plt.ylim(ymin=0)
     fig3.savefig(outpath+'affirmations_user.png',bbox_inches='tight')
     plt.close(fig3)
 
 
     fig4 = plt.figure(figsize=img_size)
-    our_user['influences'].plot(color='mediumorchid',linewidth=2.0, use_index=True)
+    our_user['influences'].plot(color='mediumorchid',linewidth=2.0, marker='.', use_index=True)
     plt.xlabel('Meeting Date')
     plt.ylabel('Influences')
     plt.title('Influences over Time')
-    plt.xticks(rotation='vertical')
+    plt.xticks(rotation=45, ticks=nticks, labels=xlabs)
     plt.ylim(ymin=0)
     fig4.savefig(outpath+'influences_user.png',bbox_inches='tight')
     plt.close(fig4)
@@ -742,7 +740,6 @@ def create_plots(select_participant):
 
 count_users = 0
 count_all_users = len(known_users)
-GTuser_meetings = {}
 for key in known_users:
     create_plots(select_participant = key)
     count_users += 1
