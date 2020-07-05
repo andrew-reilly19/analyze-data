@@ -15,7 +15,7 @@ import os
 import matplotlib.pyplot as plt
 import statistics
 
-path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
+path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports_riffai/'
 
 dfinit = pd.read_csv (path+'utterances_annotated_S2_complete.csv')
 dfinit['startTime'] =  pd.to_datetime(dfinit['startTime'])
@@ -91,6 +91,8 @@ Riff AI USERS:
     V4Kc1uN0pgP7oVhaDjcmp6swV2F3 : Mike
 '''
 
+
+'''
 #GT users
 #known_users = {'MLRP_207nuzZNLc8YvoV':'Alena','MLRP_b8eXeA6wOsLaTGZ':'Brian','MLRP_4Z6SeqiBce2rVZP':'Marc','MLRP_9QQIU5xv6Vbferb':'Jarred','MLRP_2lb2J9sL14bWiLr':'Tamara', 'MLRP_2tOntZytvl6j4a1':'Gina', 'MLRP_8kT5pkyD7bYIkm1':'Andrew'}
 #known_users = {'MLRP_207nuzZNLc8YvoV':'One','MLRP_b8eXeA6wOsLaTGZ':'Two','MLRP_4Z6SeqiBce2rVZP':'Three','MLRP_9QQIU5xv6Vbferb':'Four','MLRP_2lb2J9sL14bWiLr':'Five', 'MLRP_2tOntZytvl6j4a1':'Six', 'MLRP_8kT5pkyD7bYIkm1':'Seven'}
@@ -115,9 +117,10 @@ for index, row in GT_users2.iterrows():
 #53 users with >2
 #93 users with >1
 #151 users with at least 1 meeting
+'''
 
 #RiffAI users
-#known_users = {'q94yeKPfA7Nf6kp8JQ69NFQ0rQw2':'Burcin', 'mGZGS6HsATg0nwArrRoXF9yYiuF3':'Andrew', 'G0DAHoX1U8hbz1IefV2Vq3TmOy72':'Beth', 'JUQuvggv76ctK1nJNOWvkkf3McT2':'Jordan', 'V4Kc1uN0pgP7oVhaDjcmp6swV2F3':'Mike'}
+known_users = {'q94yeKPfA7Nf6kp8JQ69NFQ0rQw2':'Burcin', 'mGZGS6HsATg0nwArrRoXF9yYiuF3':'Andrew', 'G0DAHoX1U8hbz1IefV2Vq3TmOy72':'Beth', 'JUQuvggv76ctK1nJNOWvkkf3McT2':'Jordan', 'V4Kc1uN0pgP7oVhaDjcmp6swV2F3':'Mike'}
 
 
 #helper functions
@@ -125,8 +128,13 @@ for index, row in GT_users2.iterrows():
 #add date function
 def add_date(row):
     rowmeet = row['meeting']
-    rowdate = meeting_info[meeting_info['meeting']==rowmeet].iloc[0]['real_start'].strftime("%B %-d")
+    rowdate = meeting_info[meeting_info['meeting']==rowmeet].iloc[0]['real_start']
     return(rowdate)
+
+def convert_date(row):
+    rowdate = row['date']
+    datestring = rowdate.strftime("%B %-d")
+    return(datestring)
 
 #add trim flag to help remove unnecessary time at beginning and end
 def trim_utterance_prep(row):
@@ -165,7 +173,7 @@ def create_list(string):
 #function to wrap everything together
 
 def create_plots(select_participant):
-    #select_participant = 'MLRP_207nuzZNLc8YvoV'
+    select_participant = 'mGZGS6HsATg0nwArrRoXF9yYiuF3'
     '''
     This section figures out the first plots, on user speaking time.  This should be converted from a single-user approach to a
     multi-user approach eventually
@@ -284,7 +292,6 @@ def create_plots(select_participant):
     all_meeting_data['date'] = all_meeting_data.apply(lambda row: add_date(row), axis=1)
     all_meeting_data = all_meeting_data.drop('meeting1', axis=1)
 
-
     #print("Producing plots")
 
     our_user = all_meeting_data[all_meeting_data['participant']==select_participant]
@@ -301,7 +308,8 @@ def create_plots(select_participant):
     actual_influences.set_index('meeting1', inplace=True)
     our_user = our_user.join(actual_influences, lsuffix='meeting', rsuffix='meeting1')
 
-    #our_user = our_user.sort_values(by=['date'])
+    our_user = our_user.sort_values(by=['date'])
+    our_user['date'] = our_user.apply(lambda row: convert_date(row), axis=1)
     our_user = our_user.set_index('date', append=True).reset_index(level=0)
 
 
@@ -369,8 +377,6 @@ def create_plots(select_participant):
 
 
     our_user_outdata.to_csv(outpath +select_participant+'_data.csv')
-
-    #TODO: need to make these lines curvy instead of jagged
 
     img_size = (7,4)
 
@@ -712,6 +718,7 @@ def create_plots(select_participant):
 
     #print('complete!')
 
+#create_plots(select_participant='mGZGS6HsATg0nwArrRoXF9yYiuF3')
 
 count_users = 0
 count_all_users = len(known_users)

@@ -13,11 +13,8 @@ import numpy as np
 import sys
 from datetime import datetime, timedelta
 
-path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
+path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports_riffai/'
 dfinit = pd.read_csv (path+'knit_utterances_S1_complete.csv')
-#dfinit = pd.read_csv (path+'knit_utterances_S1_complete_1sec.csv')
-
-#dfinit = pd.read_csv (path+'all_utterances_S0_complete.csv')
 
 dfinit['startTime'] =  pd.to_datetime(dfinit['startTime'])
 dfinit['endTime'] =  pd.to_datetime(dfinit['endTime'])
@@ -170,7 +167,7 @@ print(dftesty.shape[0], '  self-interactions found!')
 
 
 '''
-#checking the interaction counts
+#manually checking the interaction counts
 
 #research1 = df_out[df_out['meeting']=='research-2']
 #research1 = df_out[df_out['meeting']=='research-5']
