@@ -15,7 +15,7 @@ import os
 import matplotlib.pyplot as plt
 import statistics
 
-path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports_riffai/'
+path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
 
 dfinit = pd.read_csv (path+'utterances_annotated_S2_complete.csv')
 dfinit['startTime'] =  pd.to_datetime(dfinit['startTime'])
@@ -92,7 +92,7 @@ Riff AI USERS:
 '''
 
 
-'''
+
 #GT users
 #known_users = {'MLRP_207nuzZNLc8YvoV':'Alena','MLRP_b8eXeA6wOsLaTGZ':'Brian','MLRP_4Z6SeqiBce2rVZP':'Marc','MLRP_9QQIU5xv6Vbferb':'Jarred','MLRP_2lb2J9sL14bWiLr':'Tamara', 'MLRP_2tOntZytvl6j4a1':'Gina', 'MLRP_8kT5pkyD7bYIkm1':'Andrew'}
 #known_users = {'MLRP_207nuzZNLc8YvoV':'One','MLRP_b8eXeA6wOsLaTGZ':'Two','MLRP_4Z6SeqiBce2rVZP':'Three','MLRP_9QQIU5xv6Vbferb':'Four','MLRP_2lb2J9sL14bWiLr':'Five', 'MLRP_2tOntZytvl6j4a1':'Six', 'MLRP_8kT5pkyD7bYIkm1':'Seven'}
@@ -109,18 +109,19 @@ known_users = {}
 for index, row in GT_users2.iterrows():
     p_id = row['RecipientID']
     checkdf = dfinit[dfinit['participant']==p_id]
-    len(checkdf.meeting.unique())
-    if len(checkdf.meeting.unique())>1:
+    nmeets_raw = len(checkdf.meeting.unique())
+    if nmeets_raw > 0 :
         known_users[p_id] = row['DisplayName']
+
 
 #206 total users in the csv we have
 #53 users with >2
 #93 users with >1
 #151 users with at least 1 meeting
-'''
+
 
 #RiffAI users
-known_users = {'q94yeKPfA7Nf6kp8JQ69NFQ0rQw2':'Burcin', 'mGZGS6HsATg0nwArrRoXF9yYiuF3':'Andrew', 'G0DAHoX1U8hbz1IefV2Vq3TmOy72':'Beth', 'JUQuvggv76ctK1nJNOWvkkf3McT2':'Jordan', 'V4Kc1uN0pgP7oVhaDjcmp6swV2F3':'Mike'}
+#known_users = {'q94yeKPfA7Nf6kp8JQ69NFQ0rQw2':'Burcin', 'mGZGS6HsATg0nwArrRoXF9yYiuF3':'Andrew', 'G0DAHoX1U8hbz1IefV2Vq3TmOy72':'Beth', 'JUQuvggv76ctK1nJNOWvkkf3McT2':'Jordan', 'V4Kc1uN0pgP7oVhaDjcmp6swV2F3':'Mike'}
 
 
 #helper functions
@@ -139,10 +140,13 @@ def convert_date(row):
 #add trim flag to help remove unnecessary time at beginning and end
 def trim_utterance_prep(row):
     flag = 0
+    utt_len = row['utterance_length']
     mtg_info = meeting_info[meeting_info['meeting']==row['meeting']]
     if (row['startTime'] >= mtg_info.iloc[0]['real_start']) & (row['startTime'] <= mtg_info.iloc[0]['real_end']):
         flag = 1
-    return flag
+    if flag == 0:
+        utt_len = 0
+    return utt_len
 
 #add speaking percentage
 def get_speaking_percentage(row, thisdf):
@@ -173,7 +177,13 @@ def create_list(string):
 #function to wrap everything together
 
 def create_plots(select_participant):
-    select_participant = 'mGZGS6HsATg0nwArrRoXF9yYiuF3'
+    #select_participant = 'mGZGS6HsATg0nwArrRoXF9yYiuF3'
+
+    #2 meetings:
+    #select_participant = 'MLRP_9ZG35uuj61EMpU1'
+
+    #4 meetings:
+    #select_participant = 'MLRP_damgncBC702TkLb'
     '''
     This section figures out the first plots, on user speaking time.  This should be converted from a single-user approach to a
     multi-user approach eventually
@@ -191,6 +201,8 @@ def create_plots(select_participant):
         meettest = meeting_info[meeting_info['meeting']==m]
         if (meettest.iloc[0]['max_users'] > 1) & (meettest.iloc[0]['meeting_length']>5):
             p_meetings.append(m)
+
+    GTuser_meetings[select_participant] = len(p_meetings)
 
     #loop to find the ideal speaking time per meeting
     d_nusers = {}
@@ -276,9 +288,17 @@ def create_plots(select_participant):
 
     #trimming overall meeting data
     #print("user interactions complete")
-    total_meeting_data['trimflag'] = total_meeting_data.apply(lambda row: trim_utterance_prep(row), axis=1)
-    trimmed_meeting_data = total_meeting_data[total_meeting_data['trimflag']==1]
-    trimmed_meeting_data = trimmed_meeting_data.drop(['_id','trimflag','interrupts_users','affirms_users','influenced_by_users', 'startTime','endTime'], axis=1)
+    total_meeting_data['utterance_length'] = total_meeting_data.apply(lambda row: trim_utterance_prep(row), axis=1)
+    trimmed_meeting_data = total_meeting_data
+    trimmed_meeting_data = trimmed_meeting_data.drop(['_id','interrupts_users','affirms_users','influenced_by_users', 'startTime','endTime'], axis=1)
+
+    '''
+    nm = total_meeting_data[total_meeting_data['participant']==select_participant].meeting.unique()
+    print(nm)
+
+    nm2 = dfinit[dfinit['participant']==select_participant].meeting.unique()
+    print(nm2)
+    '''
 
     #print("Utterances Trimmed")
     #Trimmed and aggregate meeting data here will be used for the rest of the plotting
@@ -618,7 +638,7 @@ def create_plots(select_participant):
 
     our_user_index = cur_user_dict.get(select_participant)
 
-    user_interrupted = interruptions_grid[our_user_index,:]
+    user_interrupted = interruptions_grid[:,our_user_index]
     most_interrupts = user_interrupted.max()
     other_interrupts = user_interrupted.sum() - most_interrupts
     plotdata9 = [most_interrupts, other_interrupts]
@@ -634,7 +654,7 @@ def create_plots(select_participant):
     fig9.savefig(outpath+'pie_interrupted_by.png',bbox_inches='tight')
     plt.close(fig9)
 
-    user_interrupts = interruptions_grid[:,our_user_index]
+    user_interrupts = interruptions_grid[our_user_index,:]
     most_interrupts = user_interrupts.max()
     other_interrupts = user_interrupts.sum() - most_interrupts
     plotdata10 = [most_interrupts, other_interrupts]
@@ -651,7 +671,7 @@ def create_plots(select_participant):
     plt.close(fig10)
 
 
-    user_affirmed = affirmations_grid[our_user_index,:]
+    user_affirmed = affirmations_grid[:,our_user_index]
     most_affirms = user_affirmed.max()
     other_affirms = user_affirmed.sum() - most_affirms
     plotdata11 = [most_affirms, other_affirms]
@@ -667,7 +687,7 @@ def create_plots(select_participant):
     fig11.savefig(outpath+'pie_affirmed_by.png',bbox_inches='tight')
     plt.close(fig11)
 
-    user_affirms = affirmations_grid[:,our_user_index]
+    user_affirms = affirmations_grid[our_user_index,:]
     most_affirms = user_affirms.max()
     other_affirms = user_affirms.sum() - most_affirms
     plotdata12 = [most_affirms, other_affirms]
@@ -684,7 +704,7 @@ def create_plots(select_participant):
     plt.close(fig12)
 
 
-    user_influenced = influences_grid[our_user_index,:]
+    user_influenced = influences_grid[:,our_user_index]
     most_influences = user_influenced.max()
     other_influences = user_influenced.sum() - most_influences
     plotdata13 = [most_influences, other_influences]
@@ -700,7 +720,7 @@ def create_plots(select_participant):
     fig13.savefig(outpath+'pie_influenced_by.png',bbox_inches='tight')
     plt.close(fig13)
 
-    user_influences = influences_grid[:,our_user_index]
+    user_influences = influences_grid[our_user_index,:]
     most_influences = user_influences.max()
     other_influences = user_influences.sum() - most_influences
     plotdata14 = [most_influences, other_influences]
@@ -722,12 +742,17 @@ def create_plots(select_participant):
 
 count_users = 0
 count_all_users = len(known_users)
+GTuser_meetings = {}
 for key in known_users:
     create_plots(select_participant = key)
     count_users += 1
     print(count_users, '/', count_all_users)
 
+GT_user_out = pd.DataFrame(list(GTuser_meetings.items()), columns=['user_id','meeting_count'])
+GT_user_out.to_csv(path+'GT_user_meeting_counts.csv')
+
 print("Done!")
+
 
 
 
