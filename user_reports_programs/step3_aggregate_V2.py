@@ -102,16 +102,18 @@ GT_users2 = GT_users[['RecipientID','Email','FullName','DisplayName']]
 # GT_users2 = GT_users2.head(50)
 
 known_users = {}
+process_users = {}
 
 # checkdf = dfinit[dfinit['participant']=='MLRP_207nuzZNLc8YvoV']
 # len(checkdf.meeting.unique())
 
 for index, row in GT_users2.iterrows():
     p_id = row['RecipientID']
+    known_users[p_id] = row['DisplayName']
     checkdf = dfinit[dfinit['participant']==p_id]
     nmeets_raw = len(checkdf.meeting.unique())
     if nmeets_raw > 0 :
-        known_users[p_id] = row['DisplayName']
+        process_users[p_id] = row['DisplayName']
 
 
 #206 total users in the csv we have
@@ -187,6 +189,8 @@ def create_plots(select_participant):
 
     #4 meetings:
     #select_participant = 'MLRP_0He7uDRTMmoI1cp'
+
+    #select_participant = 'MLRP_2lb2J9sL14bWiLr'
     '''
     This section figures out the first plots, on user speaking time.  This should be converted from a single-user approach to a
     multi-user approach eventually
@@ -631,116 +635,122 @@ def create_plots(select_participant):
 
 
     #now generating the 3 sets of pie charts on interactions for this user
-    smaller_img_size = (3,3)
+    smaller_img_size = (4,3)
     explode = (0.1,0)
 
     our_user_index = cur_user_dict.get(select_participant)
 
     user_interrupted = interruptions_grid[:,our_user_index]
-    most_interrupts = user_interrupted.max()
-    other_interrupts = user_interrupted.sum() - most_interrupts
-    plotdata9 = [most_interrupts, other_interrupts]
-    o_user = np.where(user_interrupted == most_interrupts)[0]
-    o_user = opp_user_dict.get(o_user[0])
-    o_user = known_users.get(o_user)
-    plotlabels9 = o_user, 'Others'
-    colors = ('crimson','slategrey')
-    fig9 = plt.figure(figsize=smaller_img_size)
-    plt.pie(plotdata9, explode=explode, labels=plotlabels9, colors=colors,
-    autopct='%1.1f%%', shadow=True, startangle=90)
-    plt.title('You were interrupted most by...')
-    fig9.savefig(outpath+'pie_interrupted_by.png',bbox_inches='tight')
-    plt.close(fig9)
+    if user_interrupted.sum() > 0:
+        most_interrupts = user_interrupted.max()
+        other_interrupts = user_interrupted.sum() - most_interrupts
+        plotdata9 = [most_interrupts, other_interrupts]
+        o_user = np.where(user_interrupted == most_interrupts)[0]
+        o_user = opp_user_dict.get(o_user[0])
+        o_user = known_users.get(o_user)
+        plotlabels9 = o_user, 'Others'
+        colors = ('crimson','slategrey')
+        fig9 = plt.figure(figsize=smaller_img_size)
+        plt.pie(plotdata9, explode=explode, labels=plotlabels9, colors=colors,
+        autopct='%1.1f%%', shadow=True, startangle=90)
+        plt.title('You were interrupted most by...')
+        fig9.savefig(outpath+'pie_interrupted_by.png')#,bbox_inches='tight')
+        plt.close(fig9)
 
     user_interrupts = interruptions_grid[our_user_index,:]
-    most_interrupts = user_interrupts.max()
-    other_interrupts = user_interrupts.sum() - most_interrupts
-    plotdata10 = [most_interrupts, other_interrupts]
-    o_user = np.where(user_interrupts == most_interrupts)[0]
-    o_user = opp_user_dict.get(o_user[0])
-    o_user = known_users.get(o_user)
-    plotlabels10 = o_user, 'Others'
-    colors = ('crimson','slategrey')
-    fig10 = plt.figure(figsize=smaller_img_size)
-    plt.pie(plotdata10, explode=explode, labels=plotlabels10, colors=colors,
-    autopct='%1.1f%%', shadow=True, startangle=90)
-    plt.title('Whom you interrupted the most...')
-    fig10.savefig(outpath+'pie_most_interrupts.png',bbox_inches='tight')
-    plt.close(fig10)
+    if user_interrupts.sum() > 0:
+        most_interrupts = user_interrupts.max()
+        other_interrupts = user_interrupts.sum() - most_interrupts
+        plotdata10 = [most_interrupts, other_interrupts]
+        o_user = np.where(user_interrupts == most_interrupts)[0]
+        o_user = opp_user_dict.get(o_user[0])
+        o_user = known_users.get(o_user)
+        plotlabels10 = o_user, 'Others'
+        colors = ('crimson','slategrey')
+        fig10 = plt.figure(figsize=smaller_img_size)
+        plt.pie(plotdata10, explode=explode, labels=plotlabels10, colors=colors,
+        autopct='%1.1f%%', shadow=True, startangle=90)
+        plt.title('Whom you interrupted the most...')
+        fig10.savefig(outpath+'pie_most_interrupts.png')#,bbox_inches='tight')
+        plt.close(fig10)
 
 
     user_affirmed = affirmations_grid[:,our_user_index]
-    most_affirms = user_affirmed.max()
-    other_affirms = user_affirmed.sum() - most_affirms
-    plotdata11 = [most_affirms, other_affirms]
-    o_user = np.where(user_affirmed == most_affirms)[0]
-    o_user = opp_user_dict.get(o_user[0])
-    o_user = known_users.get(o_user)
-    plotlabels11 = o_user, 'Others'
-    colors = ('mediumseagreen','slategrey')
-    fig11 = plt.figure(figsize=smaller_img_size)
-    plt.pie(plotdata11, explode=explode, labels=plotlabels11, colors=colors,
-    autopct='%1.1f%%', shadow=True, startangle=90)
-    plt.title('You were affirmed most by...')
-    fig11.savefig(outpath+'pie_affirmed_by.png',bbox_inches='tight')
-    plt.close(fig11)
+    if user_affirmed.sum() > 0:
+        most_affirms = user_affirmed.max()
+        other_affirms = user_affirmed.sum() - most_affirms
+        plotdata11 = [most_affirms, other_affirms]
+        o_user = np.where(user_affirmed == most_affirms)[0]
+        o_user = opp_user_dict.get(o_user[0])
+        o_user = known_users.get(o_user)
+        plotlabels11 = o_user, 'Others'
+        colors = ('mediumseagreen','slategrey')
+        fig11 = plt.figure(figsize=smaller_img_size)
+        plt.pie(plotdata11, explode=explode, labels=plotlabels11, colors=colors,
+        autopct='%1.1f%%', shadow=True, startangle=90)
+        plt.title('You were affirmed most by...')
+        fig11.savefig(outpath+'pie_affirmed_by.png')#,bbox_inches='tight')
+        plt.close(fig11)
 
     user_affirms = affirmations_grid[our_user_index,:]
-    most_affirms = user_affirms.max()
-    other_affirms = user_affirms.sum() - most_affirms
-    plotdata12 = [most_affirms, other_affirms]
-    o_user = np.where(user_affirms == most_affirms)[0]
-    o_user = opp_user_dict.get(o_user[0])
-    o_user = known_users.get(o_user)
-    plotlabels12 = o_user, 'Others'
-    colors = ('mediumseagreen','slategrey')
-    fig12 = plt.figure(figsize=smaller_img_size)
-    plt.pie(plotdata12, explode=explode, labels=plotlabels12, colors=colors,
-    autopct='%1.1f%%', shadow=True, startangle=90)
-    plt.title('Whom you affirmed the most...')
-    fig12.savefig(outpath+'pie_most_affirms.png',bbox_inches='tight')
-    plt.close(fig12)
+    if user_affirms.sum() > 0:
+        most_affirms = user_affirms.max()
+        other_affirms = user_affirms.sum() - most_affirms
+        plotdata12 = [most_affirms, other_affirms]
+        o_user = np.where(user_affirms == most_affirms)[0]
+        o_user = opp_user_dict.get(o_user[0])
+        o_user = known_users.get(o_user)
+        plotlabels12 = o_user, 'Others'
+        colors = ('mediumseagreen','slategrey')
+        fig12 = plt.figure(figsize=smaller_img_size)
+        plt.pie(plotdata12, explode=explode, labels=plotlabels12, colors=colors,
+        autopct='%1.1f%%', shadow=True, startangle=90)
+        plt.title('Whom you affirmed the most...')
+        fig12.savefig(outpath+'pie_most_affirms.png')#,bbox_inches='tight')
+        plt.close(fig12)
 
 
     user_influenced = influences_grid[:,our_user_index]
-    most_influences = user_influenced.max()
-    other_influences = user_influenced.sum() - most_influences
-    plotdata13 = [most_influences, other_influences]
-    o_user = np.where(user_influenced == most_influences)[0]
-    o_user = opp_user_dict.get(o_user[0])
-    o_user = known_users.get(o_user)
-    plotlabels13 = o_user, 'Others'
-    colors = ('mediumorchid','slategrey')
-    fig13 = plt.figure(figsize=smaller_img_size)
-    plt.pie(plotdata13, explode=explode, labels=plotlabels13, colors=colors,
-    autopct='%1.1f%%', shadow=True, startangle=90)
-    plt.title('You were influenced most by...')
-    fig13.savefig(outpath+'pie_influenced_by.png',bbox_inches='tight')
-    plt.close(fig13)
+    if user_influenced.sum() > 0:
+        most_influences = user_influenced.max()
+        other_influences = user_influenced.sum() - most_influences
+        plotdata13 = [most_influences, other_influences]
+        o_user = np.where(user_influenced == most_influences)[0]
+        o_user = opp_user_dict.get(o_user[0])
+        o_user = known_users.get(o_user)
+        plotlabels13 = o_user, 'Others'
+        colors = ('mediumorchid','slategrey')
+        fig13 = plt.figure(figsize=smaller_img_size)
+        plt.pie(plotdata13, explode=explode, labels=plotlabels13, colors=colors,
+        autopct='%1.1f%%', shadow=True, startangle=90)
+        plt.title('You were influenced most by...')
+        fig13.savefig(outpath+'pie_influenced_by.png')#,bbox_inches='tight')
+        plt.close(fig13)
 
     user_influences = influences_grid[our_user_index,:]
-    most_influences = user_influences.max()
-    other_influences = user_influences.sum() - most_influences
-    plotdata14 = [most_influences, other_influences]
-    o_user = np.where(user_influences == most_influences)[0]
-    o_user = opp_user_dict.get(o_user[0])
-    o_user = known_users.get(o_user)
-    plotlabels14 = o_user, 'Others'
-    colors = ('mediumorchid','slategrey')
-    fig14 = plt.figure(figsize=smaller_img_size)
-    plt.pie(plotdata14, explode=explode, labels=plotlabels14, colors=colors,
-    autopct='%1.1f%%', shadow=True, startangle=90)
-    plt.title('Whom you influenced the most...')
-    fig14.savefig(outpath+'pie_most_influences.png',bbox_inches='tight')
-    plt.close(fig14)
+    if user_influences.sum() > 0:
+        most_influences = user_influences.max()
+        other_influences = user_influences.sum() - most_influences
+        plotdata14 = [most_influences, other_influences]
+        o_user = np.where(user_influences == most_influences)[0]
+        o_user = opp_user_dict.get(o_user[0])
+        o_user = known_users.get(o_user)
+        plotlabels14 = o_user, 'Others'
+        colors = ('mediumorchid','slategrey')
+        fig14 = plt.figure(figsize=smaller_img_size)
+        plt.pie(plotdata14, explode=explode, labels=plotlabels14, colors=colors,
+        autopct='%1.1f%%', shadow=True, startangle=90)
+        plt.title('Whom you influenced the most...')
+        fig14.savefig(outpath+'pie_most_influences.png')#,bbox_inches='tight')
+        plt.close(fig14)
 
     #print('complete!')
 
 #create_plots(select_participant='mGZGS6HsATg0nwArrRoXF9yYiuF3')
 
 count_users = 0
-count_all_users = len(known_users)
-for key in known_users:
+count_all_users = len(process_users)
+for key in process_users:
     create_plots(select_participant = key)
     count_users += 1
     print(count_users, '/', count_all_users)

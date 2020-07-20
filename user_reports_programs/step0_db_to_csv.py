@@ -9,9 +9,8 @@ This is the original conversion file I wrote, it could still use some optimizati
 is very rough and loops through the entire array of utterances multiple times.
 
 This takes approximately 5 mins to complete with the large database (staging.riff)
-This takes approximately 30 sec to complete with a medium database (gt.riff)
-
-This takes approximately 30 sec to complete with a medium database (riffai.riff)
+This takes approximately 30 sec to complete with a small-medium database (gt.riff)
+This takes approximately 1 min to complete with a medium-large database (riffai.riff)
 """
 
 import pandas as pd
@@ -94,6 +93,23 @@ print(len(df.meeting.unique()))
 
 print("writing out data")
 
-#df.to_csv(path + 'all_utterances_S0_complete.csv', index = None)
+df.to_csv(path + 'all_utterances_S0_complete.csv', index = None)
 
 #df.to_csv(path + 'all_utterances_S0_complete_w_0s.csv', index = None)
+
+
+selected_meeting2 = df[df['meeting']=='research-25']
+
+known_users = {'q94yeKPfA7Nf6kp8JQ69NFQ0rQw2':'Burcin','mGZGS6HsATg0nwArrRoXF9yYiuF3':'Andrew','G0DAHoX1U8hbz1IefV2Vq3TmOy72':'Beth',
+               'JUQuvggv76ctK1nJNOWvkkf3McT2':'Jordan','V4Kc1uN0pgP7oVhaDjcmp6swV2F3':'Mike','6lOVocg0h4gbF7ou2aEed7NR9R13':'Justin',
+               'uDpJiXwIRbO4U04F9pMpi8JcgSd2':'Reeha', 'IvNIIdX0DrYUWlGd8CWILNFJNcT2':'Recorder'}
+
+def add_name(row):
+    pid = row['participant']
+    return (known_users.get(pid))
+
+selected_meeting2['user_name'] = selected_meeting2.apply(lambda row: add_name(row), axis=1)
+
+selected_meeting2.to_csv(path+'july_7th_research_noknit.csv', index=None)
+
+

@@ -107,7 +107,6 @@ df_out.to_csv(path + 'knit_utterances_S1_complete.csv', index = None)
 print("Done!")
 
 
-
 '''
 for verification
 
@@ -143,3 +142,24 @@ research1 = dftest[dftest['meeting']=='research-11']
 print('5/22/2020 Utterance count = ', research1.shape[0])
 
 '''
+
+#separating out a single meeting
+
+poss_meetings = df_out[['meeting','startTime']].groupby('meeting').first()
+
+selected_meeting = df_out[df_out['meeting']=='research-25']
+
+known_users = {'q94yeKPfA7Nf6kp8JQ69NFQ0rQw2':'Burcin','mGZGS6HsATg0nwArrRoXF9yYiuF3':'Andrew','G0DAHoX1U8hbz1IefV2Vq3TmOy72':'Beth',
+               'JUQuvggv76ctK1nJNOWvkkf3McT2':'Jordan','V4Kc1uN0pgP7oVhaDjcmp6swV2F3':'Mike','6lOVocg0h4gbF7ou2aEed7NR9R13':'Justin',
+               'uDpJiXwIRbO4U04F9pMpi8JcgSd2':'Reeha', 'IvNIIdX0DrYUWlGd8CWILNFJNcT2':'Recorder'}
+
+def add_name(row):
+    pid = row['participant']
+    return (known_users.get(pid))
+
+selected_meeting['user_name'] = selected_meeting.apply(lambda row: add_name(row), axis=1)
+
+selected_meeting.to_csv(path+'july_7th_research_meeting.csv', index=None)
+
+
+

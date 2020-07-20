@@ -171,9 +171,11 @@ print(dftesty.shape[0], '  self-interactions found!')
 
 #research1 = df_out[df_out['meeting']=='research-2']
 #research1 = df_out[df_out['meeting']=='research-5']
-research1 = df_out[df_out['meeting']=='research-10']
+
+research1 = df_out[df_out['meeting']=='research-25']
 total_utterances = research1.shape[0]
 print('Total Utterances:', total_utterances)
+
 research2 = research1[research1['affirmations']>0]
 #research1.dtypes
 research2 = research2.drop(['_id','meeting','myindex'], axis=1)
@@ -184,8 +186,9 @@ research1['speaking_percentage'] = research1.apply(lambda row: (row['utterance_l
 research1 = research1.drop(['_id','startTime','endTime','meeting', 'interrupts_users','affirms_users','influenced_by_users','myindex'], axis=1)
 research1 = research1.groupby(['participant']).sum()
 research1 = research1.sort_values(by=['utterance_length'])
-'''
 
+#research1.to_csv(path+'july_7th_meeting_aggregates.csv')
+'''
 
 '''
 research-2 meeting met on 4/22/2020 at 14:00 GMT (10 AM EST)
@@ -194,8 +197,5 @@ research-6 meeting met on 5/6/2020 at 14:30 GMT (10:30 AM EST)
 research-10 meeting met on 5/18/2020 at 15:00 GMT (11 AM EST)
 research-11 meeting met on 5/22/2020 at 19:30 GMT (3 PM EST)
 '''
-
-
-#derp = dfinit[dfinit['meeting']=='blueleaf-4']
 
 
