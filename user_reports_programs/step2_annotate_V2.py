@@ -5,6 +5,10 @@ Created on Fri May 22 09:45:30 2020
 
 @author: andrew
 
+This file will run somewhat slowly - using Riff methods it will add labels to the
+utterance data exactly the same way that it is currently done.  This can be used for futher
+research or analysis.
+
 Runtime: ~ 2.5 mins on GT data
 """
 
@@ -197,5 +201,50 @@ research-6 meeting met on 5/6/2020 at 14:30 GMT (10:30 AM EST)
 research-10 meeting met on 5/18/2020 at 15:00 GMT (11 AM EST)
 research-11 meeting met on 5/22/2020 at 19:30 GMT (3 PM EST)
 '''
+
+'''
+Writing out .csv files for comparison to model:
+
+July 7th meeting:
+research-25
+
+July 13th meeting:
+research-26
+research-27 (not the one I was a part of)
+
+July 27th meeting:
+research-35
+'''
+
+#save to desktop
+new_out_loc = '/Users/andrew/Desktop/'
+
+selected_meeting = df_out[df_out['meeting']=='research-25']
+selected_meeting.drop('myindex', axis=1, inplace=True)
+
+known_users = {'q94yeKPfA7Nf6kp8JQ69NFQ0rQw2':'Burcin','mGZGS6HsATg0nwArrRoXF9yYiuF3':'Andrew','G0DAHoX1U8hbz1IefV2Vq3TmOy72':'Beth',
+               'JUQuvggv76ctK1nJNOWvkkf3McT2':'Jordan','V4Kc1uN0pgP7oVhaDjcmp6swV2F3':'Mike','6lOVocg0h4gbF7ou2aEed7NR9R13':'Justin',
+               'uDpJiXwIRbO4U04F9pMpi8JcgSd2':'Reeha', 'IvNIIdX0DrYUWlGd8CWILNFJNcT2':'Recorder'}
+
+def add_name(row):
+    pid = row['participant']
+    return (known_users.get(pid))
+
+def replace_names(row, column):
+    pid_list = row[column]
+    name_list = []
+    for pid in pid_list:
+        name_list.append(known_users.get(pid))
+    return(name_list)
+
+selected_meeting['user_name'] = selected_meeting.apply(lambda row: add_name(row), axis=1)
+
+selected_meeting['interrupts_users'] = selected_meeting.apply(lambda row: replace_names(row, 'interrupts_users'), axis=1)
+selected_meeting['affirms_users'] = selected_meeting.apply(lambda row: replace_names(row, 'affirms_users'), axis=1)
+selected_meeting['influenced_by_users'] = selected_meeting.apply(lambda row: replace_names(row, 'influenced_by_users'), axis=1)
+
+selected_meeting.to_csv(new_out_loc + 'july7th_labeled.csv', index=None)
+
+
 
 

@@ -4,6 +4,12 @@
 Created on Fri May 22 09:45:30 2020
 
 @author: andrew
+
+Originally used for the GT data
+
+This is the aggregate file data, it will take the annotated riff data and then aggregate it in various ways,
+outputting plots for specific users across all meetings.
+
 """
 
 import pandas as pd
@@ -15,7 +21,7 @@ import os
 import matplotlib.pyplot as plt
 import statistics
 
-path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reportsGT/'
+path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports_riffai/'
 
 dfinit = pd.read_csv (path+'utterances_annotated_S2_complete.csv')
 dfinit['startTime'] =  pd.to_datetime(dfinit['startTime'])

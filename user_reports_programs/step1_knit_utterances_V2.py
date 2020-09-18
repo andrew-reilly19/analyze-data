@@ -5,7 +5,8 @@ Created on Fri May 22 09:45:30 2020
 
 @author: andrew
 
-This is meant to knit the utterances together to get better metrics down the line
+This second file is meant to knit the utterances together in a manner similar to the method already done.
+After it knits the data it will output into a new csv file for further processing
 
 Runtime: ~15 secs on GT dataset
 
@@ -147,7 +148,7 @@ print('5/22/2020 Utterance count = ', research1.shape[0])
 
 poss_meetings = df_out[['meeting','startTime']].groupby('meeting').first()
 
-selected_meeting = df_out[df_out['meeting']=='research-25']
+selected_meeting = df_out[df_out['meeting']=='research-35']
 
 known_users = {'q94yeKPfA7Nf6kp8JQ69NFQ0rQw2':'Burcin','mGZGS6HsATg0nwArrRoXF9yYiuF3':'Andrew','G0DAHoX1U8hbz1IefV2Vq3TmOy72':'Beth',
                'JUQuvggv76ctK1nJNOWvkkf3McT2':'Jordan','V4Kc1uN0pgP7oVhaDjcmp6swV2F3':'Mike','6lOVocg0h4gbF7ou2aEed7NR9R13':'Justin',
@@ -159,7 +160,18 @@ def add_name(row):
 
 selected_meeting['user_name'] = selected_meeting.apply(lambda row: add_name(row), axis=1)
 
-selected_meeting.to_csv(path+'july_7th_research_meeting.csv', index=None)
+selected_meeting.to_csv(path+'july_27th_research_meeting.csv', index=None)
+
+
+#July 13th meeting:
+# research-26
+# research-27 (not the one I was a part of)
+
+#July 27th meeting:
+# research-35
+
+
+
 
 
 

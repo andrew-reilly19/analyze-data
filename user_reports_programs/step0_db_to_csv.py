@@ -5,6 +5,11 @@ Created on Fri May 22 09:45:30 2020
 
 @author: andrew
 
+This file is meant to take the json output pulled from the Mongo Database and convert it into a csv
+format.  It also removes unnecessary data, such as:
+    1-user meetings
+    0-length utterances
+
 This is the original conversion file I wrote, it could still use some optimization, though. It
 is very rough and loops through the entire array of utterances multiple times.
 
@@ -98,6 +103,11 @@ df.to_csv(path + 'all_utterances_S0_complete.csv', index = None)
 #df.to_csv(path + 'all_utterances_S0_complete_w_0s.csv', index = None)
 
 
+
+'''
+#This section is unnecessary in the whole sequence, it outputs raw utterance data for the specified meeting
+#witout the 2-second stitch length
+
 selected_meeting2 = df[df['meeting']=='research-25']
 
 known_users = {'q94yeKPfA7Nf6kp8JQ69NFQ0rQw2':'Burcin','mGZGS6HsATg0nwArrRoXF9yYiuF3':'Andrew','G0DAHoX1U8hbz1IefV2Vq3TmOy72':'Beth',
@@ -111,5 +121,7 @@ def add_name(row):
 selected_meeting2['user_name'] = selected_meeting2.apply(lambda row: add_name(row), axis=1)
 
 selected_meeting2.to_csv(path+'july_7th_research_noknit.csv', index=None)
+
+'''
 
 

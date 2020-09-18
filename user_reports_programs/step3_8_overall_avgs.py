@@ -4,6 +4,9 @@
 Created on Fri May 22 09:45:30 2020
 
 @author: andrew
+
+This file aggregates the meetings based on user counts and converts some of the data into a more usable form
+Specifically used for the GT data project, this is largely unnecessary in the overall context
 """
 
 import pandas as pd
@@ -12,7 +15,7 @@ import datetime
 from datetime import date
 import os
 
-path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports/'
+path = '/Users/andrew/Desktop/Riff_Analytics_Internship/analyze-data/user_reports_riffai/'
 
 dfinit = pd.read_csv (path+'utterances_annotated_S2_complete.csv')
 dfinit['startTime'] =  pd.to_datetime(dfinit['startTime'])
